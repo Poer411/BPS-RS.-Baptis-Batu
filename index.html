@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapor Kerusakan IPSRS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 p-5">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg border-t-8 border-blue-600">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">IPSRS RS BAPTIS</h2>
+            <p class="text-sm text-slate-500">Formulir Laporan Kerusakan Alat</p>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-1">Nama Alat</label>
+                <input type="text" id="alat" placeholder="Contoh: AC / Bed Pasien" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Lokasi / Ruangan</label>
+                <input type="text" id="ruang" placeholder="Contoh: Ruang Anak / IGD" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-1">Foto Kerusakan</label>
+                <input type="file" id="foto" accept="image/*" capture="environment" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+            <button onclick="kirimLaporan()" id="btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all">
+                KIRIM LAPORAN
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
+        const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
+        const db = supabase.createClient(URL_PROYEK, KEY_ANON);
+
+        async function kirimLaporan() {
+            const btn = document.getElementById('btn');
+            const alat = document.getElementById('alat').value;
+            const ruang = document.getElementById('ruang').value;
+            const fileInput = document.getElementById('foto');
+
+            if(!alat || !ruang || !fileInput.files[0]) return alert("Lengkapi data dan foto!");
+
+            try {
+                btn.innerText = "⏳ Mengirim...";
+                btn.disabled = true;
+
+                const file = fileInput.files[0];
+                const namaFile = Date.now() + "_" + file.name.replace(/\s/g, '_');
+                
+                // 1. Upload Foto
+                const { error: upErr } = await db.storage.from('foto_alat').upload(namaFile, file);
+                if (upErr) throw upErr;
+
+                // 2. Simpan Data
+                const { error: insErr } = await db.from('laporan_perbaikan').insert([
+                    { nama_alat: alat, lokasi: ruang, foto_url: namaFile, status: 'Menunggu' }
+                ]);
+                if (insErr) throw insErr;
+
+                alert("✅ LAPORAN BERHASIL!");
+                location.reload();
+            } catch (err) {
+                alert("Gagal: " + err.message);
+                btn.innerText = "KIRIM LAPORAN";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
