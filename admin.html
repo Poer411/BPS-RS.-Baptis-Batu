@@ -3,80 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin IPSRS - RS Baptis</title>
+    <title>Admin Dashboard IPSRS - RS Baptis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; }
         .hidden-admin { display: none; }
+        .detail-box { background-color: #f8fafc; border-left: 3px solid #cbd5e1; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
 
-    <div id="login-panel" class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 w-full max-w-md">
+    <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md mx-4">
             <div class="text-center mb-8">
-                <span class="text-4xl">🔐</span>
-                <h2 class="text-2xl font-bold text-slate-800 mt-4">Admin IPSRS</h2>
-                <p class="text-slate-400 text-sm italic">Silakan masuk untuk akses data</p>
+                <div class="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🛠️</span>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800">Admin IPSRS</h2>
+                <p class="text-slate-400 text-sm mt-1">RS Baptis Batu</p>
             </div>
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Username</label>
-                    <input type="text" id="user-input" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Password</label>
-                    <input type="password" id="pass-input" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <button onclick="cekLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-blue-200">MASUK KE DASHBOARD</button>
+                <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold">
+                <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold">
+                <button onclick="cekLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200 uppercase tracking-wider">Masuk Sistem</button>
             </div>
-            <p id="error-msg" class="text-red-500 text-xs text-center mt-4 font-bold hidden">Username atau Password Salah!</p>
+            <p id="error-msg" class="text-red-500 text-xs text-center mt-4 font-bold hidden italic">Akses Ditolak: Periksa Kembali!</p>
         </div>
     </div>
 
     <div id="admin-dashboard" class="hidden-admin">
-        <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md px-6 py-3 flex justify-between items-center">
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">🛠️</span>
-                <h1 class="font-bold text-lg uppercase tracking-tight">Panel <span class="text-blue-400">IPSRS</span></h1>
+                <div>
+                    <h1 class="font-black text-slate-800 leading-none">IPSRS SYSTEM</h1>
+                    <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Management Panel</p>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="text-[10px] font-bold text-slate-400 hidden md:block" id="logged-user">ADMIN AKTIF</span>
-                <button onclick="logout()" class="bg-slate-700 hover:bg-red-600 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all">KELUAR</button>
+            <div class="flex gap-2">
+                <button onclick="exportKePDF()" class="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg text-[10px] font-black hover:bg-red-600 hover:text-white transition-all">PDF</button>
+                <button onclick="logout()" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-black hover:bg-red-500 hover:text-white transition-all uppercase">Keluar</button>
             </div>
         </nav>
 
-        <main class="p-4 md:p-6">
-            <div class="flex flex-wrap gap-4 mb-6 items-center justify-between">
-                <div class="flex bg-slate-200 p-1 rounded-xl gap-1">
-                    <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm">⚡ TUGAS AKTIF</button>
-                    <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50">✅ RIWAYAT SELESAI</button>
+        <main class="p-6 max-w-[1600px] mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-4 mb-8">
+                <div class="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 w-fit">
+                    <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-6 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-900 text-white shadow-md">TUGAS AKTIF</button>
+                    <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-6 py-2.5 rounded-xl font-bold text-xs transition-all text-slate-400 hover:text-slate-600">RIWAYAT SELESAI</button>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="exportKeExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-lg text-[10px] text-white font-bold">EXCEL</button>
-                    <button onclick="exportKePDF()" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-[10px] text-white font-bold">PDF</button>
-                    <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded-lg text-[10px] text-white font-bold italic">🔄 SEGARKAN</button>
+                
+                <div class="text-right">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Antrian</p>
+                    <span id="stat-aktif" class="text-4xl font-black text-slate-900 leading-none">0</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left">
                         <thead>
-                            <tr class="bg-slate-100 text-[11px] font-bold text-slate-500 uppercase border-b">
-                                <th class="px-6 py-4 text-center">Foto</th>
-                                <th class="px-4 py-4">Waktu</th>
-                                <th class="px-4 py-4">Alat</th>
-                                <th class="px-4 py-4">Detail</th>
-                                <th class="px-4 py-4 text-center">Aksi</th>
+                            <tr class="bg-slate-50/50 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                <th class="px-8 py-5 w-24 text-center">Visual</th>
+                                <th class="px-4 py-5 w-32">Waktu Masuk</th>
+                                <th class="px-4 py-5 w-56">Identitas Alat</th>
+                                <th class="px-4 py-5">Detail Kerusakan</th>
+                                <th class="px-8 py-5 w-48 text-center">Aksi Petugas</th>
                             </tr>
                         </thead>
-                        <tbody id="tabel-laporan" class="divide-y divide-slate-100 bg-white text-[13px]">
+                        <tbody id="tabel-laporan" class="divide-y divide-slate-50 text-[13px]">
                             </tbody>
                     </table>
                 </div>
@@ -85,10 +85,8 @@
     </div>
 
     <script>
-        // --- KONFIGURASI KEAMANAN ---
-        const ADMIN_USER = "lucia";
-        const ADMIN_PASS = "baptisbatu2026"; // Ganti dengan password yang Anda inginkan
-
+        const ADMIN_USER = "adminipsrs";
+        const ADMIN_PASS = "baptisbatu2024";
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
@@ -106,11 +104,9 @@
         let DATA_MASTER = [];
         let MODE_TAMPILAN = 'Aktif';
 
-        // --- FUNGSI LOGIN ---
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
-
             if (u === ADMIN_USER && p === ADMIN_PASS) {
                 sessionStorage.setItem('isLoggedIn', 'true');
                 tampilkanDashboard();
@@ -120,9 +116,8 @@
         }
 
         function tampilkanDashboard() {
-            document.getElementById('login-panel').classList.add('hidden');
+            document.getElementById('login-panel').style.display = 'none';
             document.getElementById('admin-dashboard').classList.remove('hidden-admin');
-            document.getElementById('logged-user').innerText = "USER: " + ADMIN_USER.toUpperCase();
             muatData();
         }
 
@@ -131,19 +126,37 @@
             location.reload();
         }
 
-        // --- FUNGSI DATA (Sama seperti sebelumnya) ---
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
             if (error) return;
             DATA_MASTER = data;
-            renderTable(MODE_TAMPILAN === 'Aktif' ? data.filter(d => d.status !== 'Selesai') : data.filter(d => d.status === 'Selesai'));
+            document.getElementById('stat-aktif').innerText = data.filter(d => d.status !== 'Selesai').length;
+            renderTable();
         }
 
-        function renderTable(list) {
+        function setMode(mode) {
+            MODE_TAMPILAN = mode;
+            const btnAktif = document.getElementById('btn-mode-aktif');
+            const btnSelesai = document.getElementById('btn-mode-selesai');
+            
+            if(mode === 'Aktif') {
+                btnAktif.className = "px-6 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-900 text-white shadow-md";
+                btnSelesai.className = "px-6 py-2.5 rounded-xl font-bold text-xs transition-all text-slate-400 hover:text-slate-600";
+            } else {
+                btnSelesai.className = "px-6 py-2.5 rounded-xl font-bold text-xs transition-all bg-emerald-600 text-white shadow-md";
+                btnAktif.className = "px-6 py-2.5 rounded-xl font-bold text-xs transition-all text-slate-400 hover:text-slate-600";
+            }
+            renderTable();
+        }
+
+        function renderTable() {
+            const list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
             const tbody = document.getElementById('tabel-laporan');
             tbody.innerHTML = '';
+
             list.forEach(l => {
-                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+                const tgl = new Date(l.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                
                 let opsiTeknisi = `<option value="">-- Pilih Teknisi --</option>`;
                 DAFTAR_TEKNISI.forEach(t => {
                     const selected = l.ditugaskan_ke === t.nama ? 'selected' : '';
@@ -151,26 +164,38 @@
                 });
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition-all">
-                    <td class="px-6 py-3 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-12 h-12 object-cover rounded shadow-sm mx-auto">
+                <tr class="hover:bg-slate-50/80 transition-all">
+                    <td class="px-8 py-6">
+                        <div class="relative group mx-auto w-16 h-16">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-full h-full object-cover rounded-2xl shadow-sm border border-slate-200">
+                        </div>
                     </td>
-                    <td class="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase">${tgl}</td>
-                    <td class="px-4 py-3 font-black text-slate-800 uppercase text-[12px]">${l.nama_alat}</td>
-                    <td class="px-4 py-3 text-[11px]">
-                        <p class="font-bold text-blue-600 italic">📍 ${l.lokasi}</p>
-                        <p class="text-slate-500 mt-1">"${l.isi_laporan || '-'}"</p>
+                    <td class="px-4 py-6">
+                        <span class="text-[11px] font-black text-slate-800 bg-slate-100 px-2 py-1 rounded-md uppercase">${tgl}</span>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-6">
+                        <p class="font-bold text-[14px] text-slate-900 uppercase leading-tight">${l.nama_alat}</p>
+                        <p class="text-[11px] text-slate-400 mt-1 font-medium italic">Oleh: ${l.nama_pelapor}</p>
+                    </td>
+                    <td class="px-4 py-6">
+                        <div class="p-3 rounded-xl detail-box">
+                            <p class="text-[10px] font-black text-blue-600 uppercase mb-1 tracking-wider">📍 ${l.lokasi}</p>
+                            <p class="text-slate-700 font-medium leading-relaxed italic text-[13px]">"${l.isi_laporan || 'Tanpa keterangan detail'}"</p>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
                         ${MODE_TAMPILAN === 'Aktif' ? `
-                            <div class="flex flex-col gap-1">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[10px] p-1.5 rounded border border-slate-300 font-bold outline-none">
+                            <div class="space-y-2">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="w-full text-[11px] p-2.5 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                                     ${opsiTeknisi}
                                 </select>
-                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-800 text-white text-[9px] py-2 rounded font-bold uppercase tracking-widest">Selesai</button>
+                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="w-full bg-slate-900 text-white text-[10px] py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-600 transition-colors shadow-lg shadow-slate-200">SELESAI</button>
                             </div>
                         ` : `
-                            <div class="text-center font-black text-emerald-600 uppercase text-[11px]">${l.ditugaskan_ke || '-'}</div>
+                            <div class="bg-emerald-50 border border-emerald-100 py-3 rounded-2xl text-center">
+                                <p class="text-[9px] font-black text-emerald-400 uppercase tracking-tighter">Selesai Oleh:</p>
+                                <p class="font-black text-emerald-700 text-[12px] uppercase">${l.ditugaskan_ke || '-'}</p>
+                            </div>
                         `}
                     </td>
                 </tr>`;
@@ -188,18 +213,35 @@
             muatData();
         }
 
-        function setMode(mode) {
-            MODE_TAMPILAN = mode;
-            document.getElementById('btn-mode-aktif').className = mode === 'Aktif' ? "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm" : "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
-            document.getElementById('btn-mode-selesai').className = mode === 'Selesai' ? "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-emerald-600 text-white shadow-sm" : "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
-            muatData();
+        function exportKePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
+            
+            doc.setFontSize(16);
+            doc.text('REKAPITULASI LAPORAN IPSRS - RS BAPTIS BATU', 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Status: ${MODE_TAMPILAN.toUpperCase()} | Periode: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
+
+            const data = list.map(l => [
+                new Date(l.created_at).toLocaleDateString('id-ID'),
+                l.nama_alat.toUpperCase(),
+                l.lokasi,
+                l.isi_laporan,
+                l.ditugaskan_ke || '-',
+                l.status
+            ]);
+
+            doc.autoTable({
+                startY: 28,
+                head: [['Tanggal', 'Alat', 'Lokasi', 'Masalah', 'Teknisi', 'Status']],
+                body: data,
+                headStyles: { fillStyle: [15, 23, 42] }
+            });
+            doc.save(`Laporan_IPSRS_${MODE_TAMPILAN}.pdf`);
         }
 
-        // Proteksi Halaman saat Refresh
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            tampilkanDashboard();
-        }
+        if (sessionStorage.getItem('isLoggedIn') === 'true') tampilkanDashboard();
     </script>
 </body>
 </html>
-
