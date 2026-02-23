@@ -20,11 +20,11 @@
         <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center">
             <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">Admin <span class="text-indigo-600">IPSRS</span></h2>
             <div class="space-y-3">
-                <input type="text" id="user-input" placeholder="Username" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <input type="text" id="user-input" placeholder="Username" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase">
                 <input type="password" id="pass-input" placeholder="Password" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                <button onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-2 transition-all active:scale-95">Login</button>
+                <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-2 transition-all active:scale-95">Login</button>
             </div>
-            <p class="text-[10px] text-slate-400 mt-6 uppercase font-bold tracking-widest italic">BPS_Rsbb System</p>
+            <p class="text-[10px] text-slate-400 mt-6 uppercase font-bold tracking-widest italic">RS Baptis Batu</p>
         </div>
     </div>
 
@@ -32,7 +32,7 @@
         <nav class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
             <h1 class="font-black text-slate-900 text-sm uppercase italic">🛠️ IPSRS <span class="text-indigo-600">BAPTIS</span></h1>
             <div class="flex gap-2">
-                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">PDF Report</button>
+                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase shadow-md">PDF Report</button>
                 <button onclick="logout()" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase">Logout</button>
             </div>
         </nav>
@@ -54,9 +54,9 @@
                     <thead>
                         <tr class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b">
                             <th class="px-6 py-4 text-center">Foto Bukti</th>
-                            <th class="px-4 py-4">Alat & Lokasi</th>
-                            <th class="px-4 py-4">Masalah</th>
-                            <th class="px-6 py-4 w-64 text-center">Opsi Penugasan</th>
+                            <th class="px-4 py-4 uppercase">Alat & Lokasi</th>
+                            <th class="px-4 py-4 uppercase">Detail Masalah</th>
+                            <th class="px-6 py-4 w-64 text-center uppercase">Aksi Admin</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-laporan" class="divide-y divide-slate-100"></tbody>
@@ -66,18 +66,19 @@
     </div>
 
     <script>
-        // -- KONFIGURASI --
+        // --- KONFIGURASI SUPABASE ---
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
+        // --- KONFIGURASI TELEGRAM ---
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
         const TG_CHAT_ID = "7728459706";
 
         const DAFTAR_TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
         let MASTER_DATA = [], MODE_VIEW = 'Aktif';
 
-        // -- LOGIKA LOGIN --
+        // --- FUNGSI LOGIN ---
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
@@ -86,7 +87,7 @@
                 sessionStorage.setItem('isAdmin', 'true');
                 tampilkanDashboard();
             } else {
-                alert("Login Gagal! Periksa kembali Username & Password.");
+                alert("Username atau Password Salah!");
             }
         }
 
@@ -97,10 +98,13 @@
             aktifkanRealtime();
         }
 
-        // -- DATA & TABEL --
+        // --- PENGELOLAAN DATA ---
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (!error) { MASTER_DATA = data || []; renderTable(); }
+            if (!error) {
+                MASTER_DATA = data || [];
+                renderTable();
+            }
         }
 
         function renderTable() {
@@ -114,6 +118,109 @@
                 DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition-all">
+                <tr class="hover:bg-slate-50 transition-all border-b">
                     <td class="px-6 py-4 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-xl border mx-auto shadow-sm" onerror
+                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-xl border mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
+                    </td>
+                    <td class="px-4 py-4 uppercase text-[10px]">
+                        <p class="font-black text-slate-800">${l.nama_alat}</p>
+                        <p class="font-bold text-indigo-500 mt-1 italic tracking-wider font-mono">📍 ${l.lokasi}</p>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="text-[11px] bg-slate-50 p-3 rounded-xl italic text-slate-600 border-l-4 border-indigo-400">
+                            "${l.isi_laporan}"
+                            <p class="text-[9px] not-italic font-black text-slate-400 mt-2 uppercase">Oleh: ${l.nama_pelapor}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${MODE_VIEW === 'Aktif' ? `
+                            <div class="flex flex-col gap-2">
+                                <select onchange="simpanPilihan('${l.id}', this.value)" class="text-[10px] font-bold p-3 rounded-xl border w-full outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-tighter">
+                                    ${optT}
+                                </select>
+                                <button onclick="kirimInstruksiTelegram('${l.id}')" class="bg-sky-500 text-white text-[9px] py-3 rounded-xl font-black uppercase tracking-widest shadow-md hover:bg-sky-600 transition-all">
+                                    ✈️ Kirim Ke Telegram
+                                </button>
+                                <button onclick="selesaikan('${l.id}')" class="bg-slate-800 text-white text-[9px] py-2 rounded-xl font-black uppercase hover:bg-emerald-600 transition-all">
+                                    Selesai
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="text-center bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                                <p class="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1 leading-none italic">Selesai Oleh</p>
+                                <p class="font-black text-emerald-700 text-xs uppercase">${l.ditugaskan_ke || '-'}</p>
+                            </div>
+                        `}
+                    </td>
+                </tr>`;
+            });
+        }
+
+        async function simpanPilihan(id, namaT) {
+            if(!namaT) return;
+            await db.from('laporan_perbaikan').update({ ditugaskan_ke: namaT, status: 'Proses' }).eq('id', id);
+            muatData();
+        }
+
+        async function kirimInstruksiTelegram(id) {
+            const l = MASTER_DATA.find(x => x.id == id);
+            if (!l || !l.ditugaskan_ke) {
+                alert("Pilih teknisi terlebih dahulu di menu atasnya!");
+                return;
+            }
+
+            const pesanTG = `🎯 *PENUGASAN TEKNISI* 🎯%0A----------------------------%0A👷 *Petugas:* ${l.ditugaskan_ke}%0A🛠️ *Alat:* ${l.nama_alat.toUpperCase()}%0A📍 *Lokasi:* ${l.lokasi.toUpperCase()}%0A📝 *Masalah:* _${l.isi_laporan}_%0A----------------------------%0A_Pesan otomatis Dashboard IPSRS_`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${pesanTG}&parse_mode=Markdown`);
+                alert("✈️ Notifikasi Terkirim ke Telegram!");
+            } catch (err) {
+                alert("Gagal kirim ke Telegram.");
+            }
+        }
+
+        async function selesaikan(id) {
+            if(confirm("Laporan ini sudah benar-benar selesai?")) {
+                await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
+                muatData();
+            }
+        }
+
+        function setMode(m) {
+            MODE_VIEW = m;
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? "px-6 py-2 rounded-lg font-bold text-[10px] bg-indigo-600 text-white shadow-md uppercase transition-all" : "px-6 py-2 rounded-lg font-bold text-[10px] text-slate-500 uppercase transition-all";
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? "px-6 py-2 rounded-lg font-bold text-[10px] bg-emerald-600 text-white shadow-md uppercase transition-all" : "px-6 py-2 rounded-lg font-bold text-[10px] text-slate-500 uppercase transition-all";
+            renderTable();
+        }
+
+        function aktifkanRealtime() {
+            db.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'laporan_perbaikan' }, () => {
+                muatData();
+                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{});
+            }).subscribe();
+        }
+
+        function exportKePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
+            doc.text(`REKAPITULASI LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            const body = list.map((d, i) => [i+1, d.nama_alat, d.lokasi, d.isi_laporan, d.nama_pelapor, d.ditugaskan_ke, d.status]);
+            doc.autoTable({ startY: 20, head: [['No', 'Alat', 'Lokasi', 'Masalah', 'Pelapor', 'Teknisi', 'Status']], body: body });
+            doc.save(`Laporan_IPSRS_${new Date().toLocaleDateString()}.pdf`);
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        // Cek login status saat buka halaman
+        window.onload = function() {
+            if (sessionStorage.getItem('isAdmin') === 'true') {
+                tampilkanDashboard();
+            }
+        };
+    </script>
+</body>
+</html>
