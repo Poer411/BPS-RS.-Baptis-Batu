@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS - RS Baptis</title>
+    <title>Admin Dashboard IPSRS - BPS_Rsbb</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -31,7 +31,7 @@
         <nav class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
             <h1 class="font-black text-slate-900 text-sm uppercase italic">🛠️ IPSRS <span class="text-indigo-600">BAPTIS</span></h1>
             <div class="flex gap-2">
-                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase">PDF Report</button>
+                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">Cetak Laporan (PDF)</button>
                 <button onclick="logout()" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase">Logout</button>
             </div>
         </nav>
@@ -40,11 +40,11 @@
             <div class="flex justify-between items-end mb-6">
                 <div class="flex bg-white p-1 rounded-xl shadow-sm border">
                     <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-lg font-bold text-[10px] uppercase">Antrian Aktif</button>
-                    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-lg font-bold text-[10px] uppercase">Selesai</button>
+                    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-lg font-bold text-[10px] uppercase">Riwayat Selesai</button>
                 </div>
                 <div class="text-right">
                     <span id="stat-count" class="text-3xl font-black text-indigo-600">0</span>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Kasus</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Laporan</p>
                 </div>
             </div>
 
@@ -54,8 +54,8 @@
                         <tr class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b">
                             <th class="px-6 py-4 text-center">Foto</th>
                             <th class="px-4 py-4 uppercase">Alat & Lokasi</th>
-                            <th class="px-4 py-4 uppercase">Detail Masalah</th>
-                            <th class="px-6 py-4 w-52 text-center uppercase">Disposisi Teknisi</th>
+                            <th class="px-4 py-4 uppercase">Masalah</th>
+                            <th class="px-6 py-4 w-64 text-center uppercase">Tindakan Admin</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-laporan" class="divide-y"></tbody>
@@ -69,7 +69,7 @@
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        // --- KONFIGURASI TELEGRAM (SESUAI DATA ANDA) ---
+        // --- DATA TELEGRAM ANDA ---
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
         const TG_CHAT_ID = "7728459706";
 
@@ -82,7 +82,7 @@
             if (u === "adminipsrs" && p === "baptisbatu2024") {
                 sessionStorage.setItem('isAdmin', 'true');
                 tampilkanDashboard();
-            } else { alert("User/Pass Salah!"); }
+            } else { alert("Akses Ditolak!"); }
         }
 
         function tampilkanDashboard() {
@@ -105,35 +105,42 @@
             tbody.innerHTML = '';
 
             list.forEach(l => {
-                let optT = `<option value="">-- PILIH --</option>`;
+                let optT = `<option value="">-- PILIH TEKNISI --</option>`;
                 DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
 
                 tbody.innerHTML += `
                 <tr class="hover:bg-slate-50 transition-all">
                     <td class="px-6 py-4 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-xl border mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
+                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-xl border mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
                     </td>
                     <td class="px-4 py-4">
                         <p class="font-black text-xs uppercase text-slate-800">${l.nama_alat}</p>
-                        <p class="text-[10px] font-bold text-indigo-500 uppercase mt-1">📍 ${l.lokasi}</p>
+                        <p class="text-[10px] font-bold text-indigo-500 uppercase mt-1 italic">📍 ${l.lokasi}</p>
                     </td>
                     <td class="px-4 py-4">
-                        <div class="text-[11px] bg-slate-50 p-2 rounded-lg italic text-slate-600 border-l-4 border-indigo-400">
+                        <div class="text-[11px] bg-slate-50 p-3 rounded-xl italic text-slate-600 border-l-4 border-indigo-400 shadow-inner">
                             "${l.isi_laporan}"
-                            <p class="text-[9px] not-italic font-bold text-slate-400 mt-1 uppercase">Pelapor: ${l.nama_pelapor}</p>
+                            <p class="text-[9px] not-italic font-black text-slate-400 mt-2 uppercase">Pelapor: ${l.nama_pelapor}</p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         ${MODE_VIEW === 'Aktif' ? `
                             <div class="flex flex-col gap-2">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[10px] font-bold p-3 rounded-xl border w-full outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-tighter">
+                                <select onchange="simpanPilihan('${l.id}', this.value)" class="text-[10px] font-black p-3 rounded-xl border w-full outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-tighter">
                                     ${optT}
                                 </select>
-                                <button onclick="selesaikan('${l.id}')" class="bg-slate-800 text-white text-[9px] py-2.5 rounded-xl font-black uppercase hover:bg-emerald-600 transition-all shadow-sm">Selesaikan</button>
+                                
+                                <button onclick="kirimInstruksiTelegram('${l.id}')" class="bg-sky-500 hover:bg-sky-600 text-white text-[9px] py-3 rounded-xl font-black uppercase tracking-widest transition-all shadow-md">
+                                    ✈️ Kirim Ke Telegram
+                                </button>
+
+                                <button onclick="selesaikan('${l.id}')" class="bg-slate-800 text-white text-[9px] py-2 rounded-xl font-black uppercase hover:bg-indigo-600 transition-all">
+                                    Tandai Selesai
+                                </button>
                             </div>
                         ` : `
-                            <div class="text-center bg-emerald-100 p-2 rounded-xl border border-emerald-200">
-                                <p class="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">Dikerjakan Oleh</p>
+                            <div class="text-center bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                                <p class="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">Dikerjakan Oleh</p>
                                 <p class="font-black text-emerald-700 text-xs uppercase">${l.ditugaskan_ke || '-'}</p>
                             </div>
                         `}
@@ -142,37 +149,38 @@
             });
         }
 
-        async function updateTeknisi(id, el) {
-            const namaT = el.value;
+        async function simpanPilihan(id, namaT) {
             if(!namaT) return;
+            await db.from('laporan_perbaikan').update({ ditugaskan_ke: namaT, status: 'Proses' }).eq('id', id);
+            muatData();
+        }
 
-            // 1. Simpan ke database
-            const { data, error } = await db.from('laporan_perbaikan')
-                .update({ ditugaskan_ke: namaT, status: 'Proses' })
-                .eq('id', id)
-                .select();
+        async function kirimInstruksiTelegram(id) {
+            const l = MASTER_DATA.find(x => x.id == id);
+            if (!l || !l.ditugaskan_ke) {
+                alert("Silakan pilih teknisi di menu dropdown terlebih dahulu!");
+                return;
+            }
 
-            if(!error && data.length > 0) {
-                const l = data[0];
-                
-                // 2. OTOMATIS KIRIM KE TELEGRAM SAAT ADMIN PILIH TEKNISI
-                const pesanTG = `📢 *PENUGASAN TEKNISI* 📢%0A` +
-                                `----------------------------%0A` +
-                                `👷 *Petugas:* ${namaT}%0A` +
-                                `🛠️ *Alat:* ${l.nama_alat.toUpperCase()}%0A` +
-                                `📍 *Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
-                                `📝 *Masalah:* _${l.isi_laporan}_%0A` +
-                                `----------------------------%0A` +
-                                `_Segera meluncur ke lokasi!_`;
+            const pesanTG = `🎯 *PENUGASAN TEKNISI* 🎯%0A` +
+                            `----------------------------%0A` +
+                            `👷 *Teknisi:* ${l.ditugaskan_ke}%0A` +
+                            `🛠️ *Alat:* ${l.nama_alat.toUpperCase()}%0A` +
+                            `📍 *Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
+                            `📝 *Masalah:* _${l.isi_laporan}_%0A` +
+                            `----------------------------%0A` +
+                            `_Pesan ini dikirim otomatis dari Admin Dashboard._`;
 
+            try {
                 await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${pesanTG}&parse_mode=Markdown`);
-                
-                muatData();
+                alert("✈️ Berhasil! Instruksi tugas telah dikirim ke Telegram.");
+            } catch (err) {
+                alert("Gagal mengirim notifikasi.");
             }
         }
 
         async function selesaikan(id) {
-            if(confirm("Pekerjaan benar-benar sudah selesai?")) {
+            if(confirm("Yakin laporan ini sudah selesai dikerjakan?")) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
                 muatData();
             }
@@ -196,14 +204,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             const list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            doc.setFontSize(16);
+            doc.text(`REKAPITULASI LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             const body = list.map((d, i) => [i+1, d.nama_alat, d.lokasi, d.isi_laporan, d.nama_pelapor, d.ditugaskan_ke, d.status]);
-            doc.autoTable({ startY: 20, head: [['No', 'Alat', 'Lokasi', 'Masalah', 'Pelapor', 'Teknisi', 'Status']], body: body });
-            doc.save(`Laporan_IPSRS_${MODE_VIEW}.pdf`);
-        }
-
-        function logout() { sessionStorage.clear(); location.reload(); }
-        if (sessionStorage.getItem('isAdmin')) tampilkanDashboard();
-    </script>
-</body>
-</html>
+            doc.autoTable({ startY: 20, head: [['No', 'Alat', 'Lokasi', '
