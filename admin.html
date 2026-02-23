@@ -22,8 +22,9 @@
             <div class="space-y-3">
                 <input type="text" id="user-input" placeholder="Username" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase">
                 <input type="password" id="pass-input" placeholder="Password" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                <button onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-2">Login</button>
+                <button onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-2 transition-all active:scale-95">Login</button>
             </div>
+            <p class="text-[10px] text-slate-400 mt-6 uppercase font-bold tracking-widest">RS Baptis Batu</p>
         </div>
     </div>
 
@@ -69,20 +70,25 @@
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        // --- DATA TELEGRAM ANDA ---
+        // DATA TELEGRAM
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
         const TG_CHAT_ID = "7728459706";
 
         const DAFTAR_TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
         let MASTER_DATA = [], MODE_VIEW = 'Aktif';
 
+        // --- FUNGSI LOGIN DENGAN USER & PASS BARU ---
         function cekLogin() {
             const u = document.getElementById('user-input').value.trim().toLowerCase();
             const p = document.getElementById('pass-input').value.trim();
-            if (u === "adminipsrs" && p === "baptisbatu2024") {
+            
+            // Login: admin / admin123
+            if (u === "admin" && p === "admin123") {
                 sessionStorage.setItem('isAdmin', 'true');
                 tampilkanDashboard();
-            } else { alert("Akses Ditolak!"); }
+            } else { 
+                alert("Username atau Password Salah!"); 
+            }
         }
 
         function tampilkanDashboard() {
@@ -158,7 +164,7 @@
         async function kirimInstruksiTelegram(id) {
             const l = MASTER_DATA.find(x => x.id == id);
             if (!l || !l.ditugaskan_ke) {
-                alert("Silakan pilih teknisi di menu dropdown terlebih dahulu!");
+                alert("Pilih teknisi terlebih dahulu!");
                 return;
             }
 
@@ -169,18 +175,18 @@
                             `📍 *Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
                             `📝 *Masalah:* _${l.isi_laporan}_%0A` +
                             `----------------------------%0A` +
-                            `_Pesan ini dikirim otomatis dari Admin Dashboard._`;
+                            `_Segera diproses, terima kasih._`;
 
             try {
                 await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${pesanTG}&parse_mode=Markdown`);
-                alert("✈️ Berhasil! Instruksi tugas telah dikirim ke Telegram.");
+                alert("✈️ Terkirim ke Telegram!");
             } catch (err) {
-                alert("Gagal mengirim notifikasi.");
+                alert("Gagal kirim Telegram.");
             }
         }
 
         async function selesaikan(id) {
-            if(confirm("Yakin laporan ini sudah selesai dikerjakan?")) {
+            if(confirm("Laporan selesai dikerjakan?")) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
                 muatData();
             }
@@ -204,7 +210,4 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             const list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            doc.setFontSize(16);
-            doc.text(`REKAPITULASI LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
-            const body = list.map((d, i) => [i+1, d.nama_alat, d.lokasi, d.isi_laporan, d.nama_pelapor, d.ditugaskan_ke, d.status]);
-            doc.autoTable({ startY: 20, head: [['No', 'Alat', 'Lokasi', '
+            doc.text(`LAPORAN IPSRS - ${
