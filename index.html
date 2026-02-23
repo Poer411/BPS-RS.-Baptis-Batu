@@ -3,69 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapor Kerusakan IPSRS - RS Baptis</title>
+    <title>Lapor IPSRS - RS Baptis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .hidden-section { display: none; }
+        /* Mengurangi padding input agar lebih ringkas */
+        input, textarea { padding: 0.75rem 1rem !important; font-size: 14px !important; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-3 md:p-6">
 
-    <div id="login-pelapor" class="max-w-md mx-auto mt-10 transition-all">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
-            <div class="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">🏥</div>
-            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">Akses Pelapor</h2>
-            <p class="text-slate-400 text-[11px] font-bold tracking-widest mt-1 mb-8 uppercase">RS Baptis Batu</p>
+    <div id="login-pelapor" class="max-w-[340px] mx-auto mt-12 transition-all">
+        <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 text-center">
+            <div class="bg-indigo-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl">🏥</div>
+            <h2 class="text-lg font-extrabold text-slate-800 uppercase tracking-tighter">Akses Pelapor</h2>
+            <p class="text-slate-400 text-[9px] font-bold tracking-widest mt-1 mb-6 uppercase italic">BPS-411 System</p>
             
-            <div class="space-y-3">
-                <input type="text" id="user-pelapor" placeholder="Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center uppercase tracking-widest">
-                <input type="password" id="pass-pelapor" placeholder="Password" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center tracking-widest">
-                <button onclick="authPelapor()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-95 uppercase tracking-widest text-xs mt-2">Masuk</button>
+            <div class="space-y-2">
+                <input type="text" id="user-pelapor" placeholder="USER" class="w-full bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center uppercase">
+                <input type="password" id="pass-pelapor" placeholder="PASS" class="w-full bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center">
+                <button onclick="authPelapor()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-95 uppercase tracking-widest text-[10px] mt-2">Masuk</button>
             </div>
-            <p id="error-msg" class="text-red-500 text-[10px] font-black mt-4 hidden uppercase tracking-tighter">⚠️ Username atau Password Salah!</p>
+            <p id="error-msg" class="text-red-500 text-[9px] font-black mt-3 hidden uppercase">⚠️ Salah!</p>
         </div>
     </div>
 
-    <div id="form-pelaporan" class="hidden-section max-w-lg mx-auto">
-        <header class="mb-8 flex justify-between items-center">
+    <div id="form-pelaporan" class="hidden-section max-w-md mx-auto">
+        <header class="mb-4 flex justify-between items-end px-2">
             <div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Lapor <span class="text-indigo-600">Kerusakan</span></h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Fasilitas IPSRS RS Baptis</p>
+                <h1 class="text-xl font-black text-slate-800 tracking-tighter uppercase leading-none">IPSRS <span class="text-indigo-600">BAPTIS</span></h1>
+                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Form Pelaporan Cepat</p>
             </div>
-            <button onclick="logoutPelapor()" class="text-[10px] font-black text-red-500 uppercase border border-red-100 px-3 py-1 rounded-lg">Logout</button>
+            <button onclick="logoutPelapor()" class="text-[9px] font-black text-slate-400 uppercase hover:text-red-500 transition-colors">Logout</button>
         </header>
 
-        <div class="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-5">
+        <div class="bg-white p-5 rounded-[1.5rem] shadow-lg border border-slate-100 space-y-3">
             <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Nama Pelapor</label>
-                <input type="text" id="nama_pelapor" class="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold" placeholder="Contoh: Perawat Lucia">
+                <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Nama Pelapor</label>
+                <input type="text" id="nama_pelapor" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold" placeholder="...">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Alat/Fasilitas</label>
+                    <input type="text" id="nama_alat" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold uppercase" placeholder="...">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Lokasi</label>
+                    <input type="text" id="lokasi" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold uppercase" placeholder="...">
+                </div>
             </div>
 
             <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Nama Alat / Fasilitas</label>
-                <input type="text" id="nama_alat" class="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase" placeholder="Contoh: AC / BED PASIEN">
+                <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Detail Kerusakan</label>
+                <textarea id="isi_laporan" rows="3" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-medium text-sm" placeholder="Jelaskan masalahnya..."></textarea>
             </div>
 
             <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Lokasi / Ruangan</label>
-                <input type="text" id="lokasi" class="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase" placeholder="Contoh: Ruang ICU">
+                <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Lampiran Foto</label>
+                <input type="file" id="foto_alat" accept="image/*" class="w-full text-[10px] text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:bg-slate-800 file:text-white cursor-pointer bg-slate-50 rounded-xl p-1">
             </div>
 
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block tracking-widest">Detail Kerusakan (WAJIB JELAS)</label>
-                <textarea id="isi_laporan" rows="4" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-medium italic text-lg" placeholder="Jelaskan apa yang rusak..."></textarea>
-            </div>
-
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">Foto Kerusakan</label>
-                <input type="file" id="foto_alat" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer bg-slate-50 rounded-2xl p-2">
-            </div>
-
-            <button onclick="kirimLaporan()" id="btn-kirim" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-indigo-200 transition-all uppercase tracking-widest text-sm">Kirim Laporan ke IPSRS</button>
+            <button onclick="kirimLaporan()" id="btn-kirim" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-100 transition-all uppercase tracking-widest text-[11px] mt-2 active:bg-indigo-700">Kirim Ke IPSRS</button>
         </div>
+        
+        <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-4 tracking-[0.3em]">v2.0 Compact Edition</p>
     </div>
 
     <script>
@@ -73,11 +78,9 @@
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        // --- SISTEM LOGIN PELAPOR ---
         function authPelapor() {
             const u = document.getElementById('user-pelapor').value.toLowerCase().trim();
             const p = document.getElementById('pass-pelapor').value.trim();
-
             if (u === 'bps' && p === '411') {
                 localStorage.setItem('auth_pelapor', 'true');
                 tampilkanForm();
@@ -96,12 +99,10 @@
             location.reload();
         }
 
-        // Jalankan saat halaman dibuka
         if (localStorage.getItem('auth_pelapor') === 'true') {
             tampilkanForm();
         }
 
-        // --- SISTEM KIRIM LAPORAN ---
         async function kirimLaporan() {
             const btn = document.getElementById('btn-kirim');
             const n_pelapor = document.getElementById('nama_pelapor').value;
@@ -111,11 +112,11 @@
             const fileFoto = document.getElementById('foto_alat').files[0];
 
             if (!n_pelapor || !n_alat || !lok || !isi || !fileFoto) {
-                alert('Mohon lengkapi semua data termasuk Foto!');
+                alert('Lengkapi data & foto!');
                 return;
             }
 
-            btn.innerText = 'MENGIRIM...';
+            btn.innerText = 'PROSES...';
             btn.disabled = true;
 
             const namaFile = `${Date.now()}_${fileFoto.name}`;
@@ -123,7 +124,7 @@
                 .from('foto_alat')
                 .upload(namaFile, fileFoto);
 
-            if (uploadError) { alert('Gagal Upload Foto'); btn.disabled = false; return; }
+            if (uploadError) { alert('Gagal Upload'); btn.disabled = false; return; }
 
             const { error: insertError } = await db.from('laporan_perbaikan').insert([
                 { 
@@ -137,10 +138,10 @@
             ]);
 
             if (!insertError) {
-                alert('Laporan berhasil terkirim! IPSRS akan segera menindaklanjuti.');
+                alert('Terkirim!');
                 location.reload();
             } else {
-                alert('Gagal mengirim data.');
+                alert('Gagal!');
                 btn.disabled = false;
             }
         }
