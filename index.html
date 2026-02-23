@@ -14,41 +14,37 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 flex flex-col items-center">
+<body class="bg-slate-100 min-h-screen p-4 flex flex-col items-center justify-center">
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border-t-[10px] border-blue-700 overflow-hidden">
         
-        <div class="w-full h-44 bg-blue-50 flex justify-center overflow-hidden border-b">
-            <img src="https://hcqyfhndihjpuihjzusx.supabase.co/storage/v1/object/public/foto_alat/TEKNISI_LISTRIK_2.jpg" alt="Teknisi" class="h-full object-contain">
-        </div>
-
         <div class="p-6 space-y-4">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-black text-slate-800 flex justify-center items-center gap-2">
+            <div class="text-center mb-8 mt-2">
+                <h1 class="text-3xl font-black text-slate-800 flex justify-center items-center gap-2">
                     <span>🛠️</span> IPSRS BAPTIS
                 </h1>
-                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Laporan Kerusakan Fasilitas & Alat</p>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">RS BAPTIS BATU - FORM PELAPORAN</p>
             </div>
 
-            <div class="space-y-3">
+            <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Nama Pelapor</label>
-                    <input type="text" id="pelapor" placeholder="Contoh: Perawat Andi" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <input type="text" id="pelapor" placeholder="Ketik nama Anda" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
 
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Nama Alat / Fasilitas</label>
-                    <input type="text" id="alat" placeholder="Contoh: AC, Bed, Dental Unit" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <input type="text" id="alat" placeholder="Apa yang rusak? (AC/Bed/Lampu)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
 
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Lokasi / Ruangan</label>
-                    <input type="text" id="ruang" placeholder="Contoh: IGD, Paviliun, ICU" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <input type="text" id="ruang" placeholder="Di ruangan mana?" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
 
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 ml-1 uppercase">Detail Kerusakan</label>
-                    <textarea id="laporan" rows="3" placeholder="Jelaskan apa yang rusak..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+                    <textarea id="laporan" rows="3" placeholder="Jelaskan kendalanya..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
                 </div>
                 
                 <div class="bg-blue-50 p-4 rounded-xl border-2 border-dashed border-blue-200 text-center">
@@ -57,16 +53,15 @@
                 </div>
             </div>
 
-            <button onclick="kirimLaporan()" id="btn" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
-                KIRIM LAPORAN KE IPSRS
+            <button onclick="kirimLaporan()" id="btn" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2 mt-4">
+                KIRIM LAPORAN
             </button>
         </div>
     </div>
 
-    <p class="mt-6 text-[10px] text-slate-400 font-medium">© 2026 IPSRS RS Baptis Batu - V2.0</p>
+    <p class="mt-6 text-[10px] text-slate-400 font-medium italic italic">"Laporan Cepat, Kerja Tepat"</p>
 
     <script>
-        // Konfigurasi Supabase Anda
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
@@ -81,21 +76,18 @@
                 file: document.getElementById('foto').files[0]
             };
 
-            // Validasi Sederhana
             if(!data.nama_pelapor || !data.nama_alat || !data.file) {
-                return alert("Mohon lengkapi Nama Pelapor, Nama Alat, dan Foto Kerusakan!");
+                return alert("Mohon lengkapi Nama, Alat, dan Foto!");
             }
 
             try {
-                btn.innerText = "⏳ SEDANG MENGIRIM...";
+                btn.innerText = "⏳ MENGIRIM...";
                 btn.disabled = true;
 
-                // 1. Upload Foto ke Storage
                 const namaFile = `IPSRS_${Date.now()}.jpg`;
                 const { error: upErr } = await db.storage.from('foto_alat').upload(namaFile, data.file);
                 if (upErr) throw upErr;
 
-                // 2. Simpan Data ke Tabel laporan_perbaikan
                 const { error: insErr } = await db.from('laporan_perbaikan').insert([{ 
                     nama_pelapor: data.nama_pelapor, 
                     nama_alat: data.nama_alat, 
@@ -106,13 +98,11 @@
                 }]);
                 if (insErr) throw insErr;
 
-                alert("✅ LAPORAN BERHASIL TERKIRIM!\nTerima kasih, tim IPSRS akan segera menindaklanjuti.");
+                alert("✅ TERKIRIM! Tim IPSRS akan segera cek.");
                 location.reload();
-
             } catch (err) {
-                console.error(err);
-                alert("Gagal mengirim laporan: " + err.message);
-                btn.innerText = "KIRIM LAPORAN KE IPSRS";
+                alert("Gagal: " + err.message);
+                btn.innerText = "KIRIM LAPORAN";
                 btn.disabled = false;
             }
         }
