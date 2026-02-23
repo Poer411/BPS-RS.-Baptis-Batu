@@ -136,14 +136,11 @@
                         <div class="text-[9px] text-indigo-500 font-bold mt-1 uppercase">📍 ${l.lokasi}</div>
                     </td>
                     <td>
-<td>
-    <div class="bg-slate-50 p-3 rounded-xl border italic text-slate-700 text-[13px] leading-snug">
-        "${l.isi_laporan}"
-        <div class="not-italic font-black text-[10px] text-slate-500 mt-2 uppercase tracking-tight">
-            Oleh: ${l.nama_pelapor}
-        </div>
-    </div>
-</td>                    </td>
+                        <div class="bg-slate-50 p-2 rounded border italic text-slate-600 text-[10px]">
+                            "${l.isi_laporan}"
+                            <div class="not-italic font-bold text-[8px] text-slate-400 mt-1 uppercase">Oleh: ${l.nama_pelapor}</div>
+                        </div>
+                    </td>
                     <td class="text-right">
                         <div class="flex flex-col gap-1 w-full max-w-[150px] ml-auto">
                             ${MODE_VIEW === 'Aktif' ? `
@@ -214,5 +211,3 @@
     </script>
 </body>
 </html>
-
-
