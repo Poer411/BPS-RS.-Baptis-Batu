@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Aktif IPSRS - RS Baptis</title>
+    <title>Dashboard Admin IPSRS - Tim Teknisi</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,29 +15,23 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-full mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🛠️</span>
-                <h1 class="font-bold text-lg tracking-tight uppercase underline decoration-blue-500 underline-offset-4">DAFTAR TUGAS AKTIF</h1>
-            </div>
-            <div class="flex gap-2 text-[11px]">
-                <button onclick="downloadExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-bold">📊 LAPORAN EXCEL</button>
-                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold">🔄 SEGARKAN</button>
-            </div>
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🛠️</span>
+            <h1 class="font-bold text-lg tracking-tight uppercase">Manajemen Teknisi <span class="text-blue-400">IPSRS</span></h1>
         </div>
+        <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">🔄 REFRESH</button>
     </nav>
 
     <main class="p-6">
-        <div class="flex flex-wrap gap-4 mb-6 items-center">
-            <div class="bg-white px-6 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-col min-w-[140px]">
-                <span class="text-[10px] font-bold text-red-500 uppercase tracking-widest italic animate-pulse">Tugas Belum Selesai</span>
-                <span id="stat-aktif" class="font-extrabold text-2xl text-slate-800">0</span>
-            </div>
-
+        <div class="flex flex-wrap gap-4 mb-6 items-center justify-between">
             <div class="flex bg-slate-200 p-1 rounded-xl gap-1">
                 <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm">⚡ TUGAS AKTIF</button>
                 <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50">✅ RIWAYAT SELESAI</button>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tugas Belum Selesai</p>
+                <h3 id="stat-aktif" class="text-2xl font-black text-slate-800 leading-none">0</h3>
             </div>
         </div>
 
@@ -47,12 +41,10 @@
                     <thead>
                         <tr class="bg-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                             <th class="px-6 py-4 w-20 text-center">Foto</th>
-                            <th class="px-4 py-4 w-32">Waktu Lapor</th>
+                            <th class="px-4 py-4 w-32">Waktu</th>
                             <th class="px-4 py-4 w-48">Alat / Fasilitas</th>
-                            <th class="px-4 py-4 w-40">Lokasi</th>
-                            <th class="px-4 py-4">Detail Laporan</th>
-                            <th class="px-4 py-4 w-32">Urgensi</th>
-                            <th id="th-aksi" class="px-4 py-4 w-44 text-center">Aksi Manajemen</th>
+                            <th class="px-4 py-4">Lokasi & Detail</th>
+                            <th class="px-4 py-4 w-64 text-center">Pilih Teknisi & Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-laporan" class="divide-y divide-slate-100 bg-white text-[13px]">
@@ -66,51 +58,35 @@
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
-        
+
+        // --- DATA DAFTAR TEKNISI (Silakan Edit Di Sini) ---
+        const DAFTAR_TEKNISI = [
+            { nama: "Eko Listrik", wa: "628123456789" },
+            { nama: "Budi Bangunan", wa: "628234567890" },
+            { nama: "Agus Medis", wa: "628345678901" },
+            { nama: "Indra Umum", wa: "628456789012" }
+        ];
+
         let DATA_MASTER = [];
-        let MODE_TAMPILAN = 'Aktif'; // Pilihan: 'Aktif' atau 'Selesai'
+        let MODE_TAMPILAN = 'Aktif';
 
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
             if (error) return;
             DATA_MASTER = data;
-            
-            // Hitung statistik khusus yang belum selesai
-            const jmlAktif = data.filter(d => d.status !== 'Selesai').length;
-            document.getElementById('stat-aktif').innerText = jmlAktif;
-            
+            document.getElementById('stat-aktif').innerText = data.filter(d => d.status !== 'Selesai').length;
             filterDanRender();
         }
 
         function setMode(mode) {
             MODE_TAMPILAN = mode;
-            
-            // Update UI Tombol
-            const btnAktif = document.getElementById('btn-mode-aktif');
-            const btnSelesai = document.getElementById('btn-mode-selesai');
-            
-            if(mode === 'Aktif') {
-                btnAktif.className = "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm";
-                btnSelesai.className = "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
-                document.getElementById('th-aksi').innerText = "Aksi Manajemen";
-            } else {
-                btnSelesai.className = "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-emerald-600 text-white shadow-sm";
-                btnAktif.className = "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
-                document.getElementById('th-aksi').innerText = "Catatan";
-            }
-            
+            document.getElementById('btn-mode-aktif').className = mode === 'Aktif' ? "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm" : "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
+            document.getElementById('btn-mode-selesai').className = mode === 'Selesai' ? "px-5 py-2 rounded-lg font-bold text-[11px] transition-all bg-emerald-600 text-white shadow-sm" : "px-5 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500 hover:bg-white/50";
             filterDanRender();
         }
 
         function filterDanRender() {
-            let filtered;
-            if(MODE_TAMPILAN === 'Aktif') {
-                // Tampilkan hanya yang Menunggu & Proses
-                filtered = DATA_MASTER.filter(d => d.status !== 'Selesai');
-            } else {
-                // Tampilkan hanya yang Selesai
-                filtered = DATA_MASTER.filter(d => d.status === 'Selesai');
-            }
+            const filtered = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
             renderTable(filtered);
         }
 
@@ -118,52 +94,48 @@
             const tbody = document.getElementById('tabel-laporan');
             tbody.innerHTML = '';
 
-            if(list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400 italic">Tidak ada data ${MODE_TAMPILAN.toLowerCase()} saat ini.</td></tr>`;
-                return;
-            }
-
             list.forEach(l => {
-                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-                const urgensiWarna = l.urgensi?.includes("Merah") ? "text-red-600 font-extrabold bg-red-50" : (l.urgensi?.includes("Kuning") ? "text-orange-500 font-bold" : "text-emerald-600");
+                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+                
+                // Membuat Dropdown Pilihan Teknisi
+                let opsiTeknisi = `<option value="">-- Pilih Teknisi --</option>`;
+                DAFTAR_TEKNISI.forEach(t => {
+                    const selected = l.ditugaskan_ke === t.nama ? 'selected' : '';
+                    opsiTeknisi += `<option value="${t.nama}" data-wa="${t.wa}" ${selected}>${t.nama}</option>`;
+                });
 
                 tbody.innerHTML += `
                 <tr class="hover:bg-slate-50 transition-all">
-                    <td class="px-6 py-3">
+                    <td class="px-6 py-3 text-center">
                         <a href="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" target="_blank">
-                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-lg border shadow-sm">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-lg border shadow-sm mx-auto">
                         </a>
                     </td>
+                    <td class="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase">${tgl}</td>
                     <td class="px-4 py-3">
-                        <p class="font-bold text-slate-700">${tgl.split(',')[0]}</p>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase">${tgl.split(',')[1]}</p>
-                    </td>
-                    <td class="px-4 py-3 uppercase">
-                        <p class="font-bold text-slate-800">${l.nama_alat}</p>
-                        <p class="text-[11px] text-slate-400 italic font-semibold">Oleh: ${l.nama_pelapor}</p>
+                        <p class="font-black text-slate-800 uppercase text-[12px]">${l.nama_alat}</p>
+                        <p class="text-[10px] text-red-500 font-bold uppercase tracking-tighter">${l.urgensi || 'NORMAL'}</p>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="text-[12px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">📍 ${l.lokasi}</span>
-                    </td>
-                    <td class="px-4 py-3 text-[12px] text-slate-600 italic">
-                        "${l.isi_laporan || '-'}"
+                        <p class="text-[12px] font-bold text-blue-700 mb-1 italic">📍 ${l.lokasi}</p>
+                        <p class="text-[11px] text-slate-500 leading-tight">"${l.isi_laporan || '-'}"</p>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="text-[10px] px-2 py-1 rounded uppercase font-black ${urgensiWarna}">${l.urgensi || 'NORMAL'}</span>
-                        <div class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">${l.status}</div>
-                    </td>
-                    <td class="px-4 py-3 text-center">
                         ${MODE_TAMPILAN === 'Aktif' ? `
-                            <div class="flex flex-col gap-1.5">
-                                <div class="flex gap-1">
-                                    <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}')" class="flex-1 bg-white text-emerald-600 font-bold text-[9px] py-2 rounded-md border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all">WA</button>
-                                    <button onclick="updateStatus('${l.id}', 'Proses')" class="flex-1 bg-white text-blue-600 font-bold text-[9px] py-2 rounded-md border border-blue-200 hover:bg-blue-600 hover:text-white transition-all uppercase">Proses</button>
+                            <div class="flex flex-col gap-2 items-center">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="w-full text-[11px] p-2 rounded-lg border border-slate-300 bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                    ${opsiTeknisi}
+                                </select>
+                                <div class="flex gap-1 w-full">
+                                    <button onclick="hubungiTeknisi('${l.id}')" class="flex-1 bg-emerald-50 text-emerald-700 font-bold text-[9px] py-2 rounded-md border border-emerald-200">📱 WA TEKNISI</button>
+                                    <button onclick="updateStatus('${l.id}', 'Selesai')" class="flex-1 bg-slate-800 text-white font-bold text-[9px] py-2 rounded-md">✅ SELESAI</button>
                                 </div>
-                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="w-full bg-slate-800 text-white font-bold text-[9px] py-2 rounded-md hover:bg-emerald-600 transition-all uppercase">Selesaikan</button>
                             </div>
                         ` : `
-                            <p class="text-[10px] text-emerald-600 font-bold">✅ SELESAI OLEH:</p>
-                            <p class="text-[11px] font-black uppercase text-slate-700">${l.ditugaskan_ke || '-'}</p>
+                            <div class="text-center">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Dikerjakan Oleh:</p>
+                                <p class="text-[12px] font-black text-emerald-600 uppercase">${l.ditugaskan_ke || '-'}</p>
+                            </div>
                         `}
                     </td>
                 </tr>
@@ -171,26 +143,30 @@
             });
         }
 
-        async function updateStatus(id, statusBaru) {
-            let updateObj = { status: statusBaru };
-            if(statusBaru === 'Proses') {
-                const n = prompt("Tunjuk Teknisi Bertugas:");
-                if(!n) return;
-                updateObj.ditugaskan_ke = n;
+        async function updateTeknisi(id, element) {
+            const nama = element.value;
+            if(!nama) return;
+            const { error } = await db.from('laporan_perbaikan').update({ ditugaskan_ke: nama, status: 'Proses' }).eq('id', id);
+            if (!error) {
+                alert("Teknisi ditugaskan: " + nama);
+                muatData();
             }
-            await db.from('laporan_perbaikan').update(updateObj).eq('id', id);
-            muatData();
         }
 
-        function hubungiWA(nama, alat) {
-            window.open(`https://wa.me/?text=Halo ${nama}, tim IPSRS menanggapi laporan ${alat}.`, '_blank');
+        async function updateStatus(id, statusBaru) {
+            const { error } = await db.from('laporan_perbaikan').update({ status: statusBaru }).eq('id', id);
+            if (!error) muatData();
         }
 
-        function downloadExcel() {
-            const ws = XLSX.utils.json_to_sheet(DATA_MASTER);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Rekap Laporan Full");
-            XLSX.writeFile(wb, "Laporan_IPSRS_Baptis_Full.xlsx");
+        function hubungiTeknisi(id) {
+            // Cari data laporan dan teknisi terkait
+            const laporan = DATA_MASTER.find(d => d.id == id);
+            const teknisi = DAFTAR_TEKNISI.find(t => t.nama === laporan.ditugaskan_ke);
+            
+            if(!teknisi) return alert("Pilih teknisi terlebih dahulu!");
+
+            const pesan = encodeURIComponent(`*TUGAS IPSRS BARU*\n\nAlat: ${laporan.nama_alat}\nLokasi: ${laporan.lokasi}\nLaporan: ${laporan.isi_laporan}\n\nSegera tindak lanjuti, terima kasih.`);
+            window.open(`https://wa.me/${teknisi.wa}?text=${pesan}`, '_blank');
         }
 
         muatData();
