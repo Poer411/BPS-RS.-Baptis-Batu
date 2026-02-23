@@ -99,4 +99,131 @@
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
         const DAFTAR_TEKNISI = [
-            { nama: "DIDIT", wa: "6281331755209" }, { nama: "SUS
+            { nama: "DIDIT", wa: "6281331755209" }, { nama: "SUSANTO", wa: "6289668467140" },
+            { nama: "LUCIA", wa: "6285708203992" }, { nama: "ROKIM", wa: "6285806690875" },
+            { nama: "BAMBANG", wa: "628980506696" }, { nama: "PURNOMO", wa: "6285100332530" },
+            { nama: "TWIN", wa: "6285646405019" }
+        ];
+
+        let DATA_MASTER = [];
+        let MODE_TAMPILAN = 'Aktif';
+
+        function cekLogin() {
+            const u = document.getElementById('user-input').value;
+            const p = document.getElementById('pass-input').value;
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                tampilkanDashboard();
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+            }
+        }
+
+        function tampilkanDashboard() {
+            document.getElementById('login-panel').style.display = 'none';
+            document.getElementById('admin-dashboard').classList.remove('hidden-admin');
+            muatData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
+
+        async function muatData() {
+            const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
+            if (!error) { DATA_MASTER = data; renderTable(); }
+        }
+
+        function setMode(mode) {
+            MODE_TAMPILAN = mode;
+            document.getElementById('btn-mode-aktif').className = mode === 'Aktif' ? "px-4 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500";
+            document.getElementById('btn-mode-selesai').className = mode === 'Selesai' ? "px-4 py-2 rounded-lg font-bold text-[11px] transition-all bg-emerald-600 text-white shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500";
+            renderTable();
+        }
+
+        function resetFilter() {
+            document.getElementById('filter-mulai').value = '';
+            document.getElementById('filter-sampai').value = '';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tglMulai = document.getElementById('filter-mulai').value;
+            const tglSampai = document.getElementById('filter-sampai').value;
+
+            let list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
+
+            if (tglMulai && tglSampai) {
+                list = list.filter(d => {
+                    const tglData = d.created_at.split('T')[0];
+                    return tglData >= tglMulai && tglData <= tglSampai;
+                });
+            }
+
+            document.getElementById('stat-count').innerText = list.length;
+            const tbody = document.getElementById('tabel-laporan');
+            tbody.innerHTML = '';
+
+            list.forEach(l => {
+                const tgl = new Date(l.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                let opsiTeknisi = `<option value="">-- Pilih --</option>`;
+                DAFTAR_TEKNISI.forEach(t => {
+                    const selected = l.ditugaskan_ke === t.nama ? 'selected' : '';
+                    opsiTeknisi += `<option value="${t.nama}" ${selected}>${t.nama}</option>`;
+                });
+
+                tbody.innerHTML += `
+                <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
+                    <td class="px-4 py-2 text-center">
+                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-10 h-10 object-cover rounded-lg border shadow-sm mx-auto">
+                    </td>
+                    <td class="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase">${tgl}</td>
+                    <td class="px-4 py-2">
+                        <p class="font-bold text-[12px] text-slate-800 uppercase leading-tight">${l.nama_alat}</p>
+                        <p class="text-[10px] text-blue-500 font-bold tracking-tight uppercase">📍 ${l.lokasi}</p>
+                    </td>
+                    <td class="px-4 py-2">
+                        <div class="detail-text px-3 py-1 bg-slate-50 rounded-md border-l-2 border-slate-200">
+                            ${l.isi_laporan || '-'}
+                        </div>
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        ${MODE_TAMPILAN === 'Aktif' ? `
+                            <div class="flex flex-col gap-1">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[9px] p-1.5 rounded-lg border border-slate-300 font-bold bg-white">
+                                    ${opsiTeknisi}
+                                </select>
+                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-800 text-white text-[9px] py-1.5 rounded-lg font-bold uppercase hover:bg-emerald-600 transition-all">Selesai</button>
+                            </div>
+                        ` : `<p class="text-[10px] font-black text-emerald-600 uppercase italic">${l.ditugaskan_ke || '-'}</p>`}
+                    </td>
+                </tr>`;
+            });
+        }
+
+        async function updateTeknisi(id, element) {
+            const nama = element.value;
+            if(!nama) return;
+            await db.from('laporan_perbaikan').update({ ditugaskan_ke: nama, status: 'Proses' }).eq('id', id);
+            muatData();
+        }
+
+        async function updateStatus(id, statusBaru) {
+            await db.from('laporan_perbaikan').update({ status: statusBaru }).eq('id', id);
+            muatData();
+        }
+
+        function exportKePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
+            const data = list.map(l => [new Date(l.created_at).toLocaleDateString('id-ID'), l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke]);
+            doc.autoTable({ head: [['Tgl', 'Alat', 'Lokasi', 'Laporan', 'Teknisi']], body: data });
+            doc.save('Laporan_IPSRS.pdf');
+        }
+
+        if (sessionStorage.getItem('isLoggedIn') === 'true') tampilkanDashboard();
+    </script>
+</body>
+</html>
