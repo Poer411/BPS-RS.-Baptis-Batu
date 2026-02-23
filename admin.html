@@ -3,101 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS</title>
+    <title>Dashboard Eksekutif IPSRS - RS Baptis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        /* Gunakan display none manual agar lebih pasti */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; }
         #admin-dashboard { display: none; }
-        td { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
-        .detail-text { font-size: 15px; font-weight: 500; color: #1e293b; }
+        
+        /* Custom Glassmorphism & Shadows */
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .table-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); }
+        
+        /* Table Row Density */
+        td { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; vertical-align: middle; }
+        
+        /* Typography for details */
+        .detail-text { font-size: 15px; font-weight: 500; line-height: 1.5; color: #334155; }
+        .alat-title { font-size: 13px; font-weight: 800; letter-spacing: -0.01em; color: #0f172a; }
     </style>
 </head>
 <body>
 
-    <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md mx-4 text-center">
-            <h2 class="text-2xl font-black text-slate-800 mb-6 uppercase tracking-tight">Admin IPSRS</h2>
-            <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500">
-                <button onclick="cekLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition-all shadow-lg">LOGIN SEKARANG</button>
+    <div id="login-panel" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md mx-4 text-center border border-white/20">
+            <div class="mb-8">
+                <div class="bg-indigo-600 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/30 mb-4">
+                    <span class="text-3xl">🛡️</span>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">IPSRS <span class="text-indigo-600">ADMIN</span></h2>
+                <p class="text-slate-400 font-medium mt-2 text-sm uppercase tracking-widest">RS BAPTIS BATU</p>
             </div>
-            <p id="error-msg" class="text-red-500 text-xs mt-4 font-bold hidden italic">Gagal: Data tidak cocok!</p>
+            <div class="space-y-4">
+                <input type="text" id="user-input" placeholder="Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold">
+                <input type="password" id="pass-input" placeholder="Password" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold">
+                <button onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-200 transform hover:-translate-y-1">MASUK DASHBOARD</button>
+            </div>
+            <p id="error-msg" class="text-red-500 text-xs mt-6 font-bold hidden italic bg-red-50 py-2 rounded-lg">Kombinasi User & Password Salah!</p>
         </div>
     </div>
 
     <div id="admin-dashboard">
-        <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 flex justify-between items-center">
-            <h1 class="font-black text-slate-800 text-sm uppercase">🛠️ Panel <span class="text-blue-600">IPSRS</span></h1>
-            <div class="flex gap-2">
-                <button onclick="exportKePDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black border border-red-100 uppercase">PDF</button>
-                <button onclick="logout()" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">Keluar</button>
+        <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-600 p-2 rounded-xl">
+                    <span class="text-white text-xl">🛠️</span>
+                </div>
+                <div>
+                    <h1 class="font-black text-slate-900 text-lg leading-tight uppercase tracking-tighter">IPSRS <span class="text-indigo-600 font-extrabold underline decoration-2 underline-offset-4">Digital</span></h1>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">Management System v2.0</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="exportKePDF()" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-200 uppercase tracking-wider">Cetak PDF</button>
+                <div class="h-8 w-px bg-slate-200 mx-2"></div>
+                <button onclick="logout()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-5 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-wider">Logout</button>
             </div>
         </nav>
 
-        <main class="p-6 max-w-[1600px] mx-auto">
-            <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-                <div class="flex bg-slate-200 p-1 rounded-xl gap-1 h-fit">
-                    <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-4 py-2 rounded-lg font-bold text-[11px] bg-white text-blue-900 shadow-sm">TUGAS AKTIF</button>
-                    <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-4 py-2 rounded-lg font-bold text-[11px] text-slate-500">RIWAYAT</button>
-                </div>
-                
-                <div class="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                    <input type="date" id="filter-mulai" onchange="renderTable()" class="text-[11px] border rounded p-1 outline-none">
-                    <input type="date" id="filter-sampai" onchange="renderTable()" class="text-[11px] border rounded p-1 outline-none">
-                    <button onclick="resetFilter()" class="text-[10px] text-blue-600 font-bold uppercase tracking-tight">Reset</button>
+        <main class="p-8 max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 items-end">
+                <div class="lg:col-span-3">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Kategori Laporan</p>
+                    <div class="flex bg-slate-200/60 p-1.5 rounded-2xl gap-1">
+                        <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="flex-1 py-3 rounded-xl font-bold text-xs transition-all bg-white text-indigo-900 shadow-sm">TUGAS AKTIF</button>
+                        <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="flex-1 py-3 rounded-xl font-bold text-xs transition-all text-slate-500 hover:text-slate-800">RIWAYAT SELESAI</button>
+                    </div>
                 </div>
 
-                <div class="text-right">
-                    <span id="stat-count" class="text-2xl font-black text-slate-800 leading-none">0</span>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Data</p>
+                <div class="lg:col-span-6 glass-card p-4 rounded-[1.5rem] border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="flex-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Mulai Dari</label>
+                        <input type="date" id="filter-mulai" onchange="renderTable()" class="w-full text-xs font-bold border-none bg-slate-100 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase block mb-1">Sampai Dengan</label>
+                        <input type="date" id="filter-sampai" onchange="renderTable()" class="w-full text-xs font-bold border-none bg-slate-100 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <button onclick="resetFilter()" class="h-10 px-4 mt-4 text-[10px] font-black text-indigo-600 uppercase hover:bg-indigo-50 rounded-xl transition-all">Reset</button>
+                </div>
+
+                <div class="lg:col-span-3 text-right bg-indigo-600 p-5 rounded-[1.5rem] text-white shadow-xl shadow-indigo-200">
+                    <p class="text-[10px] font-bold text-indigo-100 uppercase tracking-[0.2em]">Total Terfilter</p>
+                    <span id="stat-count" class="text-4xl font-black">0</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b">
-                            <th class="px-4 py-4 w-20 text-center uppercase">Foto</th>
-                            <th class="px-4 py-4 w-28 uppercase">Waktu</th>
-                            <th class="px-4 py-4 w-48 uppercase">Alat / Lokasi</th>
-                            <th class="px-4 py-4 uppercase">Detail Kerusakan</th>
-                            <th class="px-4 py-4 w-36 text-center uppercase italic">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-laporan"></tbody>
-                </table>
+            <div class="bg-white rounded-[2.5rem] border border-slate-200 table-shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                                <th class="px-8 py-6 w-24 text-center">Visual</th>
+                                <th class="px-4 py-6 w-32">Waktu</th>
+                                <th class="px-4 py-6 w-64">Nama Alat & Lokasi</th>
+                                <th class="px-4 py-6">Detail Keluhan</th>
+                                <th class="px-8 py-6 w-44 text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-laporan" class="divide-y divide-slate-50">
+                            </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        // DATA LOGIN
+        // CONFIG & DB
         const ADMIN_USER = "adminipsrs";
         const ADMIN_PASS = "baptisbatu2024";
-
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        const DAFTAR_TEKNISI = [
-            { nama: "DIDIT" }, { nama: "SUSANTO" }, { nama: "LUCIA" },
-            { nama: "ROKIM" }, { nama: "BAMBANG" }, { nama: "PURNOMO" }, { nama: "TWIN" }
-        ];
+        const TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
+        let MASTER_DATA = [];
+        let VIEW_MODE = 'Aktif';
 
-        let DATA_MASTER = [];
-        let MODE_TAMPILAN = 'Aktif';
-
+        // AUTH FUNCTIONS
         function cekLogin() {
             const u = document.getElementById('user-input').value.trim();
             const p = document.getElementById('pass-input').value.trim();
-
             if (u === ADMIN_USER && p === ADMIN_PASS) {
                 sessionStorage.setItem('isLoggedIn', 'true');
                 tampilkanDashboard();
@@ -107,26 +137,23 @@
         }
 
         function tampilkanDashboard() {
-            // Langsung manipulasi display agar tidak gagal
             document.getElementById('login-panel').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
             muatData();
         }
 
-        function logout() {
-            sessionStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
+        function logout() { sessionStorage.removeItem('isLoggedIn'); location.reload(); }
 
+        // DATA FUNCTIONS
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (!error) { DATA_MASTER = data; renderTable(); }
+            if (!error) { MASTER_DATA = data; renderTable(); }
         }
 
-        function setMode(mode) {
-            MODE_TAMPILAN = mode;
-            document.getElementById('btn-mode-aktif').className = mode === 'Aktif' ? "px-4 py-2 rounded-lg font-bold text-[11px] bg-white text-blue-900 shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] text-slate-500";
-            document.getElementById('btn-mode-selesai').className = mode === 'Selesai' ? "px-4 py-2 rounded-lg font-bold text-[11px] bg-emerald-600 text-white shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] text-slate-500";
+        function setMode(m) {
+            VIEW_MODE = m;
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? "flex-1 py-3 rounded-xl font-bold text-xs transition-all bg-white text-indigo-900 shadow-sm" : "flex-1 py-3 rounded-xl font-bold text-xs transition-all text-slate-500 hover:text-slate-800";
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? "flex-1 py-3 rounded-xl font-bold text-xs transition-all bg-emerald-600 text-white shadow-sm" : "flex-1 py-3 rounded-xl font-bold text-xs transition-all text-slate-500 hover:text-slate-800";
             renderTable();
         }
 
@@ -139,51 +166,57 @@
         function renderTable() {
             const start = document.getElementById('filter-mulai').value;
             const end = document.getElementById('filter-sampai').value;
-
-            let list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
+            let filtered = VIEW_MODE === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
 
             if (start && end) {
-                list = list.filter(d => {
+                filtered = filtered.filter(d => {
                     const dDate = d.created_at.split('T')[0];
                     return dDate >= start && dDate <= end;
                 });
             }
 
-            document.getElementById('stat-count').innerText = list.length;
+            document.getElementById('stat-count').innerText = filtered.length;
             const tbody = document.getElementById('tabel-laporan');
             tbody.innerHTML = '';
 
-            list.forEach(l => {
+            filtered.forEach(l => {
                 const tgl = new Date(l.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                let tplTeknisi = `<option value="">-- Pilih --</option>`;
-                DAFTAR_TEKNISI.forEach(t => {
-                    tplTeknisi += `<option value="${t.nama}" ${l.ditugaskan_ke === t.nama ? 'selected' : ''}>${t.nama}</option>`;
-                });
+                let selectT = `<option value="">-- Pilih Teknisi --</option>`;
+                TEKNISI.forEach(t => selectT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
 
                 tbody.innerHTML += `
-                <tr class="border-b border-slate-50">
-                    <td class="px-4 py-2 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-10 h-10 object-cover rounded-lg border mx-auto">
-                    </td>
-                    <td class="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase">${tgl}</td>
-                    <td class="px-4 py-2">
-                        <p class="font-bold text-[12px] text-slate-800 leading-tight uppercase">${l.nama_alat}</p>
-                        <p class="text-[10px] text-blue-500 font-bold uppercase">📍 ${l.lokasi}</p>
-                    </td>
-                    <td class="px-4 py-2">
-                        <div class="detail-text px-3 py-1 bg-slate-50 rounded-md border-l-2 border-slate-300">
-                            ${l.isi_laporan || '-'}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-8 py-4 text-center">
+                        <div class="relative inline-block group">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-2xl shadow-sm border border-slate-200">
                         </div>
                     </td>
-                    <td class="px-4 py-2 text-center">
-                        ${MODE_TAMPILAN === 'Aktif' ? `
-                            <div class="flex flex-col gap-1">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[9px] p-1.5 rounded-lg border border-slate-300 font-bold">
-                                    ${tplTeknisi}
+                    <td class="px-4 py-4">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-tighter bg-slate-100 px-2 py-1 rounded-md">${tgl}</span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <p class="alat-title uppercase">${l.nama_alat}</p>
+                        <p class="text-[11px] font-bold text-indigo-500 tracking-tight mt-0.5">📍 ${l.lokasi}</p>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="detail-text bg-indigo-50/30 p-3 rounded-2xl border-l-4 border-indigo-400 italic">
+                            "${l.isi_laporan || 'Tanpa keterangan detail'}"
+                        </div>
+                    </td>
+                    <td class="px-8 py-4">
+                        ${VIEW_MODE === 'Aktif' ? `
+                            <div class="flex flex-col gap-2">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[10px] font-bold p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    ${selectT}
                                 </select>
-                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-800 text-white text-[9px] py-1.5 rounded-lg font-bold uppercase hover:bg-emerald-600 transition-all">Selesai</button>
+                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-900 hover:bg-emerald-600 text-white text-[9px] py-2.5 rounded-xl font-black uppercase tracking-widest transition-all">Selesaikan</button>
                             </div>
-                        ` : `<p class="text-[10px] font-black text-emerald-600 uppercase italic">${l.ditugaskan_ke || '-'}</p>`}
+                        ` : `
+                            <div class="bg-emerald-50 py-3 rounded-2xl text-center border border-emerald-100">
+                                <p class="text-[8px] font-black text-emerald-400 uppercase">Teknisi:</p>
+                                <p class="font-black text-emerald-700 text-[12px] uppercase tracking-tighter">${l.ditugaskan_ke || '-'}</p>
+                            </div>
+                        `}
                     </td>
                 </tr>`;
             });
@@ -195,20 +228,56 @@
             muatData();
         }
 
-        async function updateStatus(id, stat) {
-            await db.from('laporan_perbaikan').update({ status: stat }).eq('id', id);
+        async function updateStatus(id, s) {
+            await db.from('laporan_perbaikan').update({ status: s }).eq('id', id);
             muatData();
         }
 
+        // PDF EXPORT ELEGAN
         function exportKePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            const data = DATA_MASTER.filter(d => MODE_TAMPILAN === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai').map(l => [new Date(l.created_at).toLocaleDateString(), l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke]);
-            doc.autoTable({ head: [['Tgl', 'Alat', 'Lokasi', 'Laporan', 'Teknisi']], body: data });
-            doc.save('Laporan_IPSRS.pdf');
+            const start = document.getElementById('filter-mulai').value || 'Awal';
+            const end = document.getElementById('filter-sampai').value || 'Akhir';
+            
+            // Header PDF
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("LAPORAN KERJA HARIAN IPSRS", 14, 15);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("RS BAPTIS BATU - Pelayanan Sarana Prasarana Rumah Sakit", 14, 20);
+            doc.line(14, 23, 283, 23); // Line
+            
+            doc.setFontSize(9);
+            doc.text(`Periode: ${start} s/d ${end}`, 14, 30);
+            doc.text(`Status Laporan: ${VIEW_MODE.toUpperCase()}`, 14, 35);
+            doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 240, 35);
+
+            const filtered = VIEW_MODE === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
+            const bodyData = filtered.map((l, i) => [
+                i + 1,
+                new Date(l.created_at).toLocaleDateString('id-ID'),
+                l.nama_alat.toUpperCase(),
+                l.lokasi,
+                l.isi_laporan,
+                l.ditugaskan_ke || '-',
+                l.status
+            ]);
+
+            doc.autoTable({
+                startY: 40,
+                head: [['No', 'Tanggal', 'Nama Alat', 'Lokasi', 'Detail Kerusakan', 'Teknisi', 'Status']],
+                body: bodyData,
+                theme: 'grid',
+                headStyles: { fillStyle: [79, 70, 229], textColor: 255, fontSize: 10, fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: { 4: { cellWidth: 80 } }
+            });
+
+            doc.save(`Laporan_IPSRS_${VIEW_MODE}_${new Date().getTime()}.pdf`);
         }
 
-        // AUTO LOGIN CHECK
         if (sessionStorage.getItem('isLoggedIn') === 'true') tampilkanDashboard();
     </script>
 </body>
