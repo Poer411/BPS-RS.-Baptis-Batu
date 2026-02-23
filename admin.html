@@ -13,17 +13,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .hidden-admin { display: none; }
-        
-        /* Mengatur agar jarak baris tetap rapat seperti versi awal */
         td { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
-        
-        /* Box detail kerusakan dengan font lebih besar dan jelas */
-        .detail-text { 
-            font-size: 15px; /* Diperbesar dari sebelumnya */
-            font-weight: 500;
-            line-height: 1.4;
-            color: #1e293b;
-        }
+        .detail-text { font-size: 15px; font-weight: 500; line-height: 1.4; color: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -37,9 +28,9 @@
             <div class="space-y-4">
                 <input type="text" id="user-input" placeholder="Username" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold">
                 <input type="password" id="pass-input" placeholder="Password" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-semibold">
-                <button onclick="cekLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">MASUK</button>
+                <button onclick="cekLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all uppercase">Masuk</button>
             </div>
-            <p id="error-msg" class="text-red-500 text-xs text-center mt-4 font-bold hidden">Username atau Password Salah!</p>
+            <p id="error-msg" class="text-red-500 text-xs text-center mt-4 font-bold hidden italic">Login Gagal!</p>
         </div>
     </div>
 
@@ -50,20 +41,34 @@
                 <h1 class="font-black text-slate-800 text-sm uppercase">IPSRS <span class="text-blue-600">BAPTIS BATU</span></h1>
             </div>
             <div class="flex gap-2">
-                <button onclick="exportKePDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black border border-red-100">PDF</button>
+                <button onclick="exportKePDF()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black border border-red-100 uppercase">PDF</button>
                 <button onclick="logout()" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">Keluar</button>
             </div>
         </nav>
 
         <main class="py-6 max-w-[1600px] mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex bg-slate-200 p-1 rounded-xl gap-1">
+            
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+                <div class="flex bg-slate-200 p-1 rounded-xl gap-1 h-fit">
                     <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-4 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm">TUGAS AKTIF</button>
                     <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-4 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500">RIWAYAT</button>
                 </div>
-                <div class="text-right">
-                    <span id="stat-aktif" class="text-2xl font-black text-slate-800">0</span>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Laporan</p>
+
+                <div class="flex gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex-1 md:flex-none">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">Mulai</label>
+                        <input type="date" id="filter-mulai" onchange="renderTable()" class="text-[11px] border rounded p-1 outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">Sampai</label>
+                        <input type="date" id="filter-sampai" onchange="renderTable()" class="text-[11px] border rounded p-1 outline-none">
+                    </div>
+                    <button onclick="resetFilter()" class="text-[10px] text-blue-600 font-bold self-end mb-1 hover:underline">Reset</button>
+                </div>
+
+                <div class="text-right flex flex-col justify-end">
+                    <span id="stat-count" class="text-2xl font-black text-slate-800 leading-none">0</span>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Laporan Terpilih</p>
                 </div>
             </div>
 
@@ -76,10 +81,10 @@
                                 <th class="px-4 py-4 w-28">Waktu</th>
                                 <th class="px-4 py-4 w-48">Alat / Ruang</th>
                                 <th class="px-4 py-4">Detail Kerusakan</th>
-                                <th class="px-4 py-4 w-36 text-center italic">Aksi Admin</th> </tr>
+                                <th class="px-4 py-4 w-36 text-center italic">Aksi Admin</th>
+                            </tr>
                         </thead>
-                        <tbody id="tabel-laporan" class="divide-y divide-slate-50">
-                            </tbody>
+                        <tbody id="tabel-laporan" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
             </div>
@@ -94,126 +99,4 @@
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
         const DAFTAR_TEKNISI = [
-            { nama: "DIDIT", wa: "6281331755209" },
-            { nama: "SUSANTO", wa: "6289668467140" },
-            { nama: "LUCIA", wa: "6285708203992" },
-            { nama: "ROKIM", wa: "6285806690875" },
-            { nama: "BAMBANG", wa: "628980506696" },
-            { nama: "PURNOMO", wa: "6285100332530" },
-            { nama: "TWIN", wa: "6285646405019" }
-        ];
-
-        let DATA_MASTER = [];
-        let MODE_TAMPILAN = 'Aktif';
-
-        function cekLogin() {
-            const u = document.getElementById('user-input').value;
-            const p = document.getElementById('pass-input').value;
-            if (u === ADMIN_USER && p === ADMIN_PASS) {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                tampilkanDashboard();
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
-        }
-
-        function tampilkanDashboard() {
-            document.getElementById('login-panel').style.display = 'none';
-            document.getElementById('admin-dashboard').classList.remove('hidden-admin');
-            muatData();
-        }
-
-        function logout() {
-            sessionStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
-
-        async function muatData() {
-            const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (error) return;
-            DATA_MASTER = data;
-            document.getElementById('stat-aktif').innerText = data.filter(d => d.status !== 'Selesai').length;
-            renderTable();
-        }
-
-        function setMode(mode) {
-            MODE_TAMPILAN = mode;
-            document.getElementById('btn-mode-aktif').className = mode === 'Aktif' ? "px-4 py-2 rounded-lg font-bold text-[11px] transition-all bg-white text-blue-900 shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500";
-            document.getElementById('btn-mode-selesai').className = mode === 'Selesai' ? "px-4 py-2 rounded-lg font-bold text-[11px] transition-all bg-emerald-600 text-white shadow-sm" : "px-4 py-2 rounded-lg font-bold text-[11px] transition-all text-slate-500";
-            renderTable();
-        }
-
-        function renderTable() {
-            const list = MODE_TAMPILAN === 'Aktif' ? DATA_MASTER.filter(d => d.status !== 'Selesai') : DATA_MASTER.filter(d => d.status === 'Selesai');
-            const tbody = document.getElementById('tabel-laporan');
-            tbody.innerHTML = '';
-
-            list.forEach(l => {
-                const tgl = new Date(l.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                let opsiTeknisi = `<option value="">-- Pilih --</option>`;
-                DAFTAR_TEKNISI.forEach(t => {
-                    const selected = l.ditugaskan_ke === t.nama ? 'selected' : '';
-                    opsiTeknisi += `<option value="${t.nama}" ${selected}>${t.nama}</option>`;
-                });
-
-                tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
-                    <td class="px-4 py-2 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-10 h-10 object-cover rounded-lg border shadow-sm mx-auto">
-                    </td>
-                    <td class="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase leading-none">${tgl}</td>
-                    <td class="px-4 py-2">
-                        <p class="font-bold text-[12px] text-slate-800 leading-tight uppercase">${l.nama_alat}</p>
-                        <p class="text-[10px] text-blue-500 font-bold tracking-tight">📍 ${l.lokasi}</p>
-                    </td>
-                    <td class="px-4 py-2">
-                        <div class="detail-text px-3 py-1 bg-slate-50 rounded-md border-l-2 border-slate-200">
-                            ${l.isi_laporan || '-'}
-                        </div>
-                    </td>
-                    <td class="px-4 py-2 text-center">
-                        ${MODE_TAMPILAN === 'Aktif' ? `
-                            <div class="flex flex-col gap-1">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[9px] p-1.5 rounded-lg border border-slate-300 font-bold bg-white focus:ring-1 focus:ring-blue-500 outline-none">
-                                    ${opsiTeknisi}
-                                </select>
-                                <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-800 text-white text-[9px] py-1.5 rounded-lg font-bold hover:bg-emerald-600 transition-all uppercase">Selesai</button>
-                            </div>
-                        ` : `
-                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">${l.ditugaskan_ke || '-'}</p>
-                        `}
-                    </td>
-                </tr>`;
-            });
-        }
-
-        async function updateTeknisi(id, element) {
-            const nama = element.value;
-            if(!nama) return;
-            await db.from('laporan_perbaikan').update({ ditugaskan_ke: nama, status: 'Proses' }).eq('id', id);
-            muatData();
-        }
-
-        async function updateStatus(id, statusBaru) {
-            await db.from('laporan_perbaikan').update({ status: statusBaru }).eq('id', id);
-            muatData();
-        }
-
-        function exportKePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const data = DATA_MASTER.filter(d => MODE_TAMPILAN === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai').map(l => [
-                new Date(l.created_at).toLocaleDateString('id-ID'),
-                l.nama_alat,
-                l.lokasi,
-                l.isi_laporan,
-                l.ditugaskan_ke || '-'
-            ]);
-            doc.autoTable({ head: [['Tgl', 'Alat', 'Lokasi', 'Laporan', 'Teknisi']], body: data });
-            doc.save('Laporan_IPSRS.pdf');
-        }
-
-        if (sessionStorage.getItem('isLoggedIn') === 'true') tampilkanDashboard();
-    </script>
-</body>
-</html>
+            { nama: "DIDIT", wa: "6281331755209" }, { nama: "SUS
