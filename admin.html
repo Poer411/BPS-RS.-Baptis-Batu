@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin IPSRS</title>
+    <title>Dashboard Admin IPSRS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 p-4">
+<body class="bg-slate-100 p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Dashboard Monitoring IPSRS</h1>
-            <button onclick="muatData()" class="bg-blue-600 text-white px-4 py-2 rounded shadow">🔄 Refresh</button>
+        <div class="flex justify-between items-end mb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-800">Monitoring IPSRS</h1>
+                <p class="text-slate-500 uppercase tracking-widest text-xs font-bold mt-1">RS Baptis Batu - Log Server</p>
+            </div>
+            <button onclick="muatData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">🔄 Refresh Data</button>
         </div>
 
-        <div class="bg-white rounded-lg shadow border overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-800 text-white text-sm">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+            <table class="w-full text-left">
+                <thead class="bg-slate-800 text-white text-xs uppercase">
                     <tr>
-                        <th class="p-4">Tanggal</th>
-                        <th class="p-4">Alat</th>
-                        <th class="p-4">Lokasi</th>
+                        <th class="p-4">Waktu</th>
+                        <th class="p-4">Pelapor</th>
+                        <th class="p-4">Alat & Lokasi</th>
+                        <th class="p-4">Detail Kerusakan</th>
                         <th class="p-4">Foto</th>
-                        <th class="p-4">Status</th>
+                        <th class="p-4 text-center">Status / Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="tabel-laporan"></tbody>
+                <tbody id="tabel-laporan" class="text-sm divide-y"></tbody>
             </table>
         </div>
     </div>
@@ -37,7 +41,7 @@
 
         async function muatData() {
             const tbody = document.getElementById('tabel-laporan');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Memuat...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center">Memuat data...</td></tr>';
 
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
             if (error) return alert(error.message);
@@ -48,17 +52,25 @@
                 const isSelesai = item.status === 'Selesai';
                 
                 tbody.innerHTML += `
-                    <tr class="border-b text-sm hover:bg-slate-50">
-                        <td class="p-4">${new Date(item.created_at).toLocaleString('id-ID')}</td>
-                        <td class="p-4 font-bold">${item.nama_alat}</td>
-                        <td class="p-4">${item.lokasi}</td>
-                        <td class="p-4"><a href="${fotoUrl}" target="_blank"><img src="${fotoUrl}" class="w-12 h-12 object-cover rounded shadow border"></a></td>
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4 text-xs">${new Date(item.created_at).toLocaleString('id-ID')}</td>
+                        <td class="p-4 font-bold text-blue-700">${item.nama_pelapor || '-'}</td>
                         <td class="p-4">
+                            <div class="font-bold">${item.nama_alat}</div>
+                            <div class="text-xs text-slate-500">${item.lokasi}</div>
+                        </td>
+                        <td class="p-4 text-slate-600 italic">${item.isi_laporan || '-'}</td>
+                        <td class="p-4">
+                            <a href="${fotoUrl}" target="_blank">
+                                <img src="${fotoUrl}" class="w-12 h-12 object-cover rounded shadow hover:scale-150 transition">
+                            </a>
+                        </td>
+                        <td class="p-4 text-center">
                             <div class="flex flex-col gap-2">
-                                <span class="px-2 py-1 rounded-full text-[10px] font-bold text-center ${isSelesai ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-bold ${isSelesai ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
                                     ${item.status || 'Menunggu'}
                                 </span>
-                                ${!isSelesai ? `<button onclick="updateStatus(${item.id})" class="bg-slate-800 text-white text-[10px] py-1 rounded hover:bg-green-600 transition">Set Selesai</button>` : ''}
+                                ${!isSelesai ? `<button onclick="setSelesai(${item.id})" class="bg-slate-800 text-white text-[10px] py-1 rounded hover:bg-green-600 transition">Set Selesai</button>` : ''}
                             </div>
                         </td>
                     </tr>
@@ -66,7 +78,7 @@
             });
         }
 
-        async function updateStatus(id) {
+        async function setSelesai(id) {
             if(!confirm("Tandai laporan ini sudah selesai?")) return;
             const { error } = await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
             if (error) alert(error.message); else muatData();
