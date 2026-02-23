@@ -152,30 +152,35 @@
             muatData();
         }
 
-        function kirimKeWA(id) {
-            const l = MASTER_DATA.find(x => x.id === id);
-            const t = DAFTAR_TEKNISI.find(x => x.nama === l.ditugaskan_ke);
+function kirimKeWA(id) {
+    const l = MASTER_DATA.find(x => x.id === id);
+    const t = DAFTAR_TEKNISI.find(x => x.nama === l.ditugaskan_ke);
 
-            if (t && l) {
-                // Susun pesan agar rapi
-                const text = `*TUGAS PERBAIKAN IPSRS*%0A` +
-                             `----------------------------%0A` +
-                             `*Alat:* ${l.nama_alat.toUpperCase()}%0A` +
-                             `*Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
-                             `*Masalah:* _${l.isi_laporan}_%0A` +
-                             `*Pelapor:* ${l.nama_pelapor}%0A` +
-                             `----------------------------%0A` +
-                             `_Mohon segera ditindaklanjuti._`;
+    if (t && l) {
+        // 1. Bersihkan nomor (takutnya ada spasi atau karakter aneh)
+        const cleanPhone = t.wa.replace(/\D/g, ''); 
+        
+        // 2. Susun Pesan
+        const text = `*TUGAS PERBAIKAN IPSRS*%0A` +
+                     `----------------------------%0A` +
+                     `*Alat:* ${l.nama_alat.toUpperCase()}%0A` +
+                     `*Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
+                     `*Masalah:* _${l.isi_laporan}_%0A` +
+                     `*Pelapor:* ${l.nama_pelapor}%0A` +
+                     `----------------------------%0A` +
+                     `_Mohon segera ditindaklanjuti._`;
 
-                // Link WhatsApp (Gunakan api.whatsapp agar universal)
-                const url = `https://api.whatsapp.com/send?phone=${t.wa}&text=${text}`;
-                
-                // Buka di tab baru
-                const win = window.open(url, '_blank');
-                if(!win) alert("Mohon izinkan Pop-up di browser Anda!");
-            }
-        }
-
+        // 3. Gunakan Link WA Universal
+        const url = `https://wa.me/${cleanPhone}?text=${text}`;
+        
+        // 4. METODE TEMBAK LANGSUNG (Chrome Friendly)
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.click();
+    }
+}
         async function updateStatus(id, stat) {
             if(confirm("Pekerjaan sudah selesai?")) {
                 await db.from('laporan_perbaikan').update({ status: stat }).eq('id', id);
@@ -202,3 +207,4 @@
     </script>
 </body>
 </html>
+
