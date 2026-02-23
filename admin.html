@@ -3,36 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin IPSRS</title>
+    <title>Admin Dashboard IPSRS</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-100 p-4 md:p-8">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-end mb-6">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-800">Monitoring IPSRS</h1>
-                <p class="text-slate-500 uppercase tracking-widest text-xs font-bold mt-1">RS Baptis Batu - Log Server</p>
+<body class="bg-slate-50 min-h-screen">
+
+    <nav class="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-10">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="font-black text-xl flex items-center gap-2">🛠️ ADMIN IPSRS</h1>
+            <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold text-sm transition-all">🔄 REFRESH DATA</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Menunggu</p>
+                <h3 id="stat-tunggu" class="text-2xl font-black text-slate-700">0</h3>
             </div>
-            <button onclick="muatData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">🔄 Refresh Data</button>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Proses</p>
+                <h3 id="stat-proses" class="text-2xl font-black text-slate-700">0</h3>
+            </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-            <table class="w-full text-left">
-                <thead class="bg-slate-800 text-white text-xs uppercase">
-                    <tr>
-                        <th class="p-4">Waktu</th>
-                        <th class="p-4">Pelapor</th>
-                        <th class="p-4">Alat & Lokasi</th>
-                        <th class="p-4">Detail Kerusakan</th>
-                        <th class="p-4">Foto</th>
-                        <th class="p-4 text-center">Status / Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="tabel-laporan" class="text-sm divide-y"></tbody>
-            </table>
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Waktu & Pelapor</th>
+                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Alat & Detail</th>
+                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Foto</th>
+                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Status & Teknisi</th>
+                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-laporan" class="divide-y divide-slate-100">
+                        </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
@@ -41,47 +55,64 @@
 
         async function muatData() {
             const tbody = document.getElementById('tabel-laporan');
-            tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center">Memuat data...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse font-bold">Mengambil data dari server...</td></tr>';
 
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (error) return alert(error.message);
+
+            if (error) return alert("Gagal muat data: " + error.message);
 
             tbody.innerHTML = '';
-            data.forEach(item => {
-                const fotoUrl = `${URL_PROYEK}/storage/v1/object/public/foto_alat/${item.foto_url}`;
-                const isSelesai = item.status === 'Selesai';
+            let tunggu = 0, proses = 0;
+
+            data.forEach(l => {
+                if(l.status === 'Menunggu') tunggu++;
+                if(l.status === 'Proses') proses++;
+
+                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
                 
                 tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 text-xs">${new Date(item.created_at).toLocaleString('id-ID')}</td>
-                        <td class="p-4 font-bold text-blue-700">${item.nama_pelapor || '-'}</td>
-                        <td class="p-4">
-                            <div class="font-bold">${item.nama_alat}</div>
-                            <div class="text-xs text-slate-500">${item.lokasi}</div>
-                        </td>
-                        <td class="p-4 text-slate-600 italic">${item.isi_laporan || '-'}</td>
-                        <td class="p-4">
-                            <a href="${fotoUrl}" target="_blank">
-                                <img src="${fotoUrl}" class="w-12 h-12 object-cover rounded shadow hover:scale-150 transition">
-                            </a>
-                        </td>
-                        <td class="p-4 text-center">
-                            <div class="flex flex-col gap-2">
-                                <span class="px-2 py-1 rounded-full text-[10px] font-bold ${isSelesai ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
-                                    ${item.status || 'Menunggu'}
-                                </span>
-                                ${!isSelesai ? `<button onclick="setSelesai(${item.id})" class="bg-slate-800 text-white text-[10px] py-1 rounded hover:bg-green-600 transition">Set Selesai</button>` : ''}
-                            </div>
-                        </td>
-                    </tr>
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="p-4">
+                        <p class="text-[10px] text-slate-400 font-bold">${tgl}</p>
+                        <p class="font-bold text-slate-700">${l.nama_pelapor}</p>
+                        <p class="text-xs text-blue-600 font-medium">📍 ${l.lokasi}</p>
+                    </td>
+                    <td class="p-4">
+                        <p class="font-bold text-slate-800">${l.nama_alat}</p>
+                        <p class="text-xs text-slate-500 mt-1">${l.isi_laporan || '-'}</p>
+                    </td>
+                    <td class="p-4">
+                        <a href="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" target="_blank">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-lg border hover:scale-110 transition-all">
+                        </a>
+                    </td>
+                    <td class="p-4 text-xs">
+                        <span class="px-2 py-1 rounded-full font-bold ${l.status === 'Selesai' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">${l.status}</span>
+                        <p class="mt-2 font-medium text-slate-400 italic">Oleh: ${l.ditugaskan_ke || 'Belum ditunjuk'}</p>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col gap-2">
+                            <button onclick="updateStatus('${l.id}', 'Proses')" class="bg-blue-50 text-blue-700 text-[10px] font-bold py-1 px-2 rounded border border-blue-200">KERJAKAN</button>
+                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-green-50 text-green-700 text-[10px] font-bold py-1 px-2 rounded border border-green-200">SELESAI</button>
+                        </div>
+                    </td>
+                </tr>
                 `;
             });
+
+            document.getElementById('stat-tunggu').innerText = tunggu;
+            document.getElementById('stat-proses').innerText = proses;
         }
 
-        async function setSelesai(id) {
-            if(!confirm("Tandai laporan ini sudah selesai?")) return;
-            const { error } = await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
-            if (error) alert(error.message); else muatData();
+        async function updateStatus(id, statusBaru) {
+            const teknisi = statusBaru === 'Proses' ? prompt("Siapa teknisi yang bertugas?") : null;
+            
+            const updateData = { status: statusBaru };
+            if (teknisi) updateData.ditugaskan_ke = teknisi;
+
+            const { error } = await db.from('laporan_perbaikan').update(updateData).eq('id', id);
+            if (error) alert("Gagal update: " + error.message);
+            else muatData();
         }
 
         muatData();
