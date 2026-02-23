@@ -59,7 +59,6 @@
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        // --- DATA DAFTAR TEKNISI (Silakan Edit Di Sini) ---
         const DAFTAR_TEKNISI = [
             { nama: "DIDIT", wa: "6281331755209" },
             { nama: "SUSANTO", wa: "6289668467140" },
@@ -75,7 +74,10 @@
 
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (error) return;
+            if (error) {
+                console.error("Gagal memuat data:", error);
+                return;
+            }
             DATA_MASTER = data;
             document.getElementById('stat-aktif').innerText = data.filter(d => d.status !== 'Selesai').length;
             filterDanRender();
@@ -97,21 +99,27 @@
             const tbody = document.getElementById('tabel-laporan');
             tbody.innerHTML = '';
 
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-400">Tidak ada data untuk ditampilkan.</td></tr>`;
+                return;
+            }
+
             list.forEach(l => {
                 const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
                 
-                // Membuat Dropdown Pilihan Teknisi
                 let opsiTeknisi = `<option value="">-- Pilih Teknisi --</option>`;
                 DAFTAR_TEKNISI.forEach(t => {
                     const selected = l.ditugaskan_ke === t.nama ? 'selected' : '';
-                    opsiTeknisi += `<option value="${t.nama}" data-wa="${t.wa}" ${selected}>${t.nama}</option>`;
+                    opsiTeknisi += `<option value="${t.nama}" ${selected}>${t.nama}</option>`;
                 });
 
                 tbody.innerHTML += `
                 <tr class="hover:bg-slate-50 transition-all">
                     <td class="px-6 py-3 text-center">
                         <a href="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" target="_blank">
-                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-lg border shadow-sm mx-auto">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" 
+                                 onerror="this.src='https://via.placeholder.com/150?text=No+Image'"
+                                 class="w-14 h-14 object-cover rounded-lg border shadow-sm mx-auto transition-transform hover:scale-110">
                         </a>
                     </td>
                     <td class="px-4 py-3 text-[11px] font-bold text-slate-400 uppercase">${tgl}</td>
@@ -126,18 +134,18 @@
                     <td class="px-4 py-3">
                         ${MODE_TAMPILAN === 'Aktif' ? `
                             <div class="flex flex-col gap-2 items-center">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="w-full text-[11px] p-2 rounded-lg border border-slate-300 bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="w-full text-[11px] p-2 rounded-lg border border-slate-300 bg-slate-50 font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                                     ${opsiTeknisi}
                                 </select>
                                 <div class="flex gap-1 w-full">
-                                    <button onclick="hubungiTeknisi('${l.id}')" class="flex-1 bg-emerald-50 text-emerald-700 font-bold text-[9px] py-2 rounded-md border border-emerald-200">📱 WA TEKNISI</button>
-                                    <button onclick="updateStatus('${l.id}', 'Selesai')" class="flex-1 bg-slate-800 text-white font-bold text-[9px] py-2 rounded-md">✅ SELESAI</button>
+                                    <button onclick="hubungiTeknisi('${l.id}')" class="flex-1 bg-emerald-50 text-emerald-700 font-bold text-[9px] py-2 rounded-md border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all">📱 WA TEKNISI</button>
+                                    <button onclick="updateStatus('${l.id}', 'Selesai')" class="flex-1 bg-slate-800 text-white font-bold text-[9px] py-2 rounded-md hover:bg-green-600 transition-all">✅ SELESAI</button>
                                 </div>
                             </div>
                         ` : `
                             <div class="text-center">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase">Dikerjakan Oleh:</p>
-                                <p class="text-[12px] font-black text-emerald-600 uppercase">${l.ditugaskan_ke || '-'}</p>
+                                <p class="text-[12px] font-black text-emerald-600 uppercase tracking-wider">${l.ditugaskan_ke || '-'}</p>
                             </div>
                         `}
                     </td>
@@ -149,10 +157,16 @@
         async function updateTeknisi(id, element) {
             const nama = element.value;
             if(!nama) return;
-            const { error } = await db.from('laporan_perbaikan').update({ ditugaskan_ke: nama, status: 'Proses' }).eq('id', id);
+            
+            const { error } = await db.from('laporan_perbaikan').update({ 
+                ditugaskan_ke: nama, 
+                status: 'Proses' 
+            }).eq('id', id);
+            
             if (!error) {
-                alert("Teknisi ditugaskan: " + nama);
                 muatData();
+            } else {
+                alert("Gagal memperbarui teknisi.");
             }
         }
 
@@ -162,19 +176,18 @@
         }
 
         function hubungiTeknisi(id) {
-            // Cari data laporan dan teknisi terkait
             const laporan = DATA_MASTER.find(d => d.id == id);
-            const teknisi = DAFTAR_TEKNISI.find(t => t.nama === laporan.ditugaskan_ke);
+            if (!laporan.ditugaskan_ke) return alert("Pilih teknisi terlebih dahulu!");
             
-            if(!teknisi) return alert("Pilih teknisi terlebih dahulu!");
+            const teknisi = DAFTAR_TEKNISI.find(t => t.nama === laporan.ditugaskan_ke);
+            if(!teknisi) return alert("Data teknisi tidak ditemukan!");
 
             const pesan = encodeURIComponent(`*TUGAS IPSRS BARU*\n\nAlat: ${laporan.nama_alat}\nLokasi: ${laporan.lokasi}\nLaporan: ${laporan.isi_laporan}\n\nSegera tindak lanjuti, terima kasih.`);
             window.open(`https://wa.me/${teknisi.wa}?text=${pesan}`, '_blank');
         }
 
-        muatData();
+        // Jalankan saat halaman siap
+        window.onload = muatData;
     </script>
 </body>
 </html>
-
-
