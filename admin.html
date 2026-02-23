@@ -3,70 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Executive Admin IPSRS - BPS_Rsbb</title>
+    <title>Admin Dashboard IPSRS - RS Baptis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
         #admin-dashboard { display: none; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
 
     <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md mx-4 text-center border-b-8 border-indigo-600">
-            <h2 class="text-3xl font-black text-slate-800 uppercase italic">Admin <span class="text-indigo-600">IPSRS</span></h2>
-            <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] mt-2 mb-8 uppercase">RS BAPTIS - BPS_RSBB</p>
-            <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase transition-all">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold transition-all">
-                <button onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-indigo-200 transition-all uppercase tracking-widest text-xs">Akses Dashboard</button>
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center">
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">Admin <span class="text-indigo-600">IPSRS</span></h2>
+            <div class="space-y-3">
+                <input type="text" id="user-input" placeholder="Username" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold uppercase">
+                <input type="password" id="pass-input" placeholder="Password" class="w-full px-5 py-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <button onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs mt-2">Login</button>
             </div>
         </div>
     </div>
 
-    <div id="admin-dashboard" class="min-h-screen">
-        <nav class="glass border-b sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg text-white font-black text-xs italic">BPS</div>
-                <div>
-                    <h1 class="font-black text-slate-900 text-sm uppercase leading-none">IPSRS Dashboard</h1>
-                    <p class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-1 animate-pulse">● System Live</p>
-                </div>
-            </div>
+    <div id="admin-dashboard">
+        <nav class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+            <h1 class="font-black text-slate-900 text-sm uppercase italic">🛠️ IPSRS <span class="text-indigo-600">BAPTIS</span></h1>
             <div class="flex gap-2">
-                <button onclick="exportKePDF()" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md">Cetak PDF</button>
-                <button onclick="logout()" class="bg-slate-100 text-slate-500 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 transition-all">Keluar</button>
+                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase">PDF Report</button>
+                <button onclick="logout()" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase">Logout</button>
             </div>
         </nav>
 
-        <main class="p-6 max-w-[1500px] mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-                <div class="flex bg-slate-200/50 p-1.5 rounded-2xl gap-1">
-                    <button id="btn-mode-aktif" onclick="setMode('Aktif')" class="px-8 py-3 rounded-xl font-black text-[10px] bg-white text-indigo-600 shadow-sm uppercase tracking-widest transition-all">Antrian Aktif</button>
-                    <button id="btn-mode-selesai" onclick="setMode('Selesai')" class="px-8 py-3 rounded-xl font-black text-[10px] text-slate-500 uppercase tracking-widest transition-all">Selesai</button>
+        <main class="p-4 max-w-[1400px] mx-auto">
+            <div class="flex justify-between items-end mb-6">
+                <div class="flex bg-white p-1 rounded-xl shadow-sm border">
+                    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-lg font-bold text-[10px] uppercase">Antrian Aktif</button>
+                    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-lg font-bold text-[10px] uppercase">Selesai</button>
                 </div>
-                <div class="bg-white px-8 py-4 rounded-[2rem] border shadow-sm text-center min-w-[150px]">
-                    <span id="stat-count" class="text-3xl font-black text-slate-800">0</span>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Total Laporan</p>
+                <div class="text-right">
+                    <span id="stat-count" class="text-3xl font-black text-indigo-600">0</span>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Kasus</p>
                 </div>
             </div>
 
-            <div class="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden">
-                <table class="w-full text-left border-collapse">
+            <div class="bg-white rounded-3xl border shadow-sm overflow-hidden">
+                <table class="w-full text-left">
                     <thead>
-                        <tr class="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase border-b tracking-[0.1em]">
-                            <th class="px-8 py-6 w-32 text-center uppercase">Foto Bukti</th>
-                            <th class="px-6 py-6 w-64 uppercase">Alat & Lokasi</th>
-                            <th class="px-6 py-6 uppercase">Detail Laporan</th>
-                            <th class="px-8 py-6 w-64 text-center uppercase">Aksi & Disposisi</th>
+                        <tr class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b">
+                            <th class="px-6 py-4 text-center">Foto</th>
+                            <th class="px-4 py-4 uppercase">Alat & Lokasi</th>
+                            <th class="px-4 py-4 uppercase">Detail Masalah</th>
+                            <th class="px-6 py-4 w-52 text-center uppercase">Disposisi Teknisi</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-laporan" class="divide-y divide-slate-100"></tbody>
+                    <tbody id="tabel-laporan" class="divide-y"></tbody>
                 </table>
             </div>
         </main>
@@ -77,25 +69,20 @@
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
 
-        const DAFTAR_TEKNISI = [
-            { nama: "DIDIT", wa: "6281331755209" },
-            { nama: "SUSANTO", wa: "6289668467140" },
-            { nama: "LUCIA", wa: "6285708203992" },
-            { nama: "ROKIM", wa: "6285806690875" },
-            { nama: "BAMBANG", wa: "628980506696" },
-            { nama: "PURNOMO", wa: "6285100332530" },
-            { nama: "TWIN", wa: "6285646405019" }
-        ];
+        // --- KONFIGURASI TELEGRAM (SESUAI DATA ANDA) ---
+        const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
+        const TG_CHAT_ID = "7728459706";
 
+        const DAFTAR_TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
         let MASTER_DATA = [], MODE_VIEW = 'Aktif';
 
         function cekLogin() {
             const u = document.getElementById('user-input').value.trim().toLowerCase();
             const p = document.getElementById('pass-input').value.trim();
             if (u === "adminipsrs" && p === "baptisbatu2024") {
-                sessionStorage.setItem('isLogged', 'true');
+                sessionStorage.setItem('isAdmin', 'true');
                 tampilkanDashboard();
-            } else { alert("Akses Ditolak!"); }
+            } else { alert("User/Pass Salah!"); }
         }
 
         function tampilkanDashboard() {
@@ -106,50 +93,48 @@
         }
 
         async function muatData() {
-            const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (!error) { MASTER_DATA = data; renderTable(); }
+            const { data } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
+            MASTER_DATA = data || [];
+            renderTable();
         }
 
         function renderTable() {
             let list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
             document.getElementById('stat-count').innerText = list.length;
-            const tbody = document.getElementById('tabel-laporan'); 
+            const tbody = document.getElementById('tabel-laporan');
             tbody.innerHTML = '';
 
             list.forEach(l => {
-                let optT = `<option value="">-- PILIH TEKNISI --</option>`;
-                DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t.nama}" ${l.ditugaskan_ke === t.nama ? 'selected' : ''}>${t.nama}</option>`);
+                let optT = `<option value="">-- PILIH --</option>`;
+                DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50/80 transition-all">
-                    <td class="px-8 py-6 text-center">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-2xl border-2 border-white shadow-md mx-auto" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="px-6 py-4 text-center">
+                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-xl border mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=No+Photo'">
                     </td>
-                    <td class="px-6 py-6">
-                        <p class="font-black text-sm uppercase text-slate-800 tracking-tighter">${l.nama_alat}</p>
-                        <p class="text-[10px] font-bold text-indigo-600 mt-1 uppercase">📍 ${l.lokasi}</p>
+                    <td class="px-4 py-4">
+                        <p class="font-black text-xs uppercase text-slate-800">${l.nama_alat}</p>
+                        <p class="text-[10px] font-bold text-indigo-500 uppercase mt-1">📍 ${l.lokasi}</p>
                     </td>
-                    <td class="px-6 py-6">
-                        <div class="bg-slate-50 p-4 rounded-2xl italic text-slate-600 text-[12px] border-l-4 border-indigo-400 shadow-inner">
+                    <td class="px-4 py-4">
+                        <div class="text-[11px] bg-slate-50 p-2 rounded-lg italic text-slate-600 border-l-4 border-indigo-400">
                             "${l.isi_laporan}"
-                            <p class="text-[9px] not-italic font-black text-slate-400 mt-2 uppercase tracking-widest">Pelapor: ${l.nama_pelapor}</p>
+                            <p class="text-[9px] not-italic font-bold text-slate-400 mt-1 uppercase">Pelapor: ${l.nama_pelapor}</p>
                         </div>
                     </td>
-                    <td class="px-8 py-6">
+                    <td class="px-6 py-4">
                         ${MODE_VIEW === 'Aktif' ? `
                             <div class="flex flex-col gap-2">
-                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[10px] font-black p-3 rounded-xl border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-tighter">
+                                <select onchange="updateTeknisi('${l.id}', this)" class="text-[10px] font-bold p-3 rounded-xl border w-full outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-tighter">
                                     ${optT}
                                 </select>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button onclick="kirimManualWA('${l.id}')" class="bg-emerald-500 text-white text-[9px] font-black py-2.5 rounded-xl uppercase tracking-widest hover:bg-emerald-600 transition-all">WA</button>
-                                    <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-900 text-white text-[9px] font-black py-2.5 rounded-xl uppercase tracking-widest hover:bg-indigo-600 transition-all">Selesai</button>
-                                </div>
+                                <button onclick="selesaikan('${l.id}')" class="bg-slate-800 text-white text-[9px] py-2.5 rounded-xl font-black uppercase hover:bg-emerald-600 transition-all shadow-sm">Selesaikan</button>
                             </div>
                         ` : `
-                            <div class="text-center bg-emerald-50 py-3 rounded-2xl border border-emerald-100">
-                                <p class="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Dikerjakan Oleh</p>
-                                <p class="font-black text-emerald-700 text-[12px] uppercase">${l.ditugaskan_ke || '-'}</p>
+                            <div class="text-center bg-emerald-100 p-2 rounded-xl border border-emerald-200">
+                                <p class="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">Dikerjakan Oleh</p>
+                                <p class="font-black text-emerald-700 text-xs uppercase">${l.ditugaskan_ke || '-'}</p>
                             </div>
                         `}
                     </td>
@@ -160,55 +145,65 @@
         async function updateTeknisi(id, el) {
             const namaT = el.value;
             if(!namaT) return;
-            await db.from('laporan_perbaikan').update({ ditugaskan_ke: namaT, status: 'Proses' }).eq('id', id);
-            muatData();
+
+            // 1. Simpan ke database
+            const { data, error } = await db.from('laporan_perbaikan')
+                .update({ ditugaskan_ke: namaT, status: 'Proses' })
+                .eq('id', id)
+                .select();
+
+            if(!error && data.length > 0) {
+                const l = data[0];
+                
+                // 2. OTOMATIS KIRIM KE TELEGRAM SAAT ADMIN PILIH TEKNISI
+                const pesanTG = `📢 *PENUGASAN TEKNISI* 📢%0A` +
+                                `----------------------------%0A` +
+                                `👷 *Petugas:* ${namaT}%0A` +
+                                `🛠️ *Alat:* ${l.nama_alat.toUpperCase()}%0A` +
+                                `📍 *Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
+                                `📝 *Masalah:* _${l.isi_laporan}_%0A` +
+                                `----------------------------%0A` +
+                                `_Segera meluncur ke lokasi!_`;
+
+                await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${pesanTG}&parse_mode=Markdown`);
+                
+                muatData();
+            }
         }
 
-        function kirimManualWA(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            const t = DAFTAR_TEKNISI.find(x => x.nama === l.ditugaskan_ke);
-            if (t && l) {
-                const text = `*INSTRUKSI KERJA*%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}`;
-                const url = `https://api.whatsapp.com/send?phone=${t.wa}&text=${text}`;
-                const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.click();
-            } else { alert("Pilih teknisi terlebih dahulu!"); }
-        }
-
-        async function updateStatus(id, stat) {
-            if(confirm("Tandai laporan ini sebagai SELESAI?")) {
-                await db.from('laporan_perbaikan').update({ status: stat }).eq('id', id);
+        async function selesaikan(id) {
+            if(confirm("Pekerjaan benar-benar sudah selesai?")) {
+                await db.from('laporan_perbaikan').update({ status: 'Selesai' }).eq('id', id);
                 muatData();
             }
         }
 
         function setMode(m) {
             MODE_VIEW = m;
-            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? "px-8 py-3 rounded-xl font-black text-[10px] bg-white text-indigo-600 shadow-sm uppercase tracking-widest" : "px-8 py-3 rounded-xl font-black text-[10px] text-slate-500 uppercase tracking-widest";
-            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? "px-8 py-3 rounded-xl font-black text-[10px] bg-emerald-600 text-white shadow-sm uppercase tracking-widest" : "px-8 py-3 rounded-xl font-black text-[10px] text-slate-500 uppercase tracking-widest";
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? "px-6 py-2 rounded-lg font-bold text-[10px] bg-indigo-600 text-white shadow-md uppercase" : "px-6 py-2 rounded-lg font-bold text-[10px] text-slate-500 uppercase";
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? "px-6 py-2 rounded-lg font-bold text-[10px] bg-emerald-600 text-white shadow-md uppercase" : "px-6 py-2 rounded-lg font-bold text-[10px] text-slate-500 uppercase";
             renderTable();
+        }
+
+        function aktifkanRealtime() {
+            db.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'laporan_perbaikan' }, () => {
+                muatData();
+                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{});
+            }).subscribe();
         }
 
         function exportKePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             const list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            doc.setFontSize(18); doc.text("LAPORAN KERJA IPSRS RS BAPTIS", 14, 20);
-            doc.setFontSize(10); doc.text(`Status: ${MODE_VIEW} | Tanggal Cetak: ${new Date().toLocaleString()}`, 14, 28);
-            
-            const tableData = list.map((d, i) => [i+1, d.nama_alat, d.lokasi, d.isi_laporan, d.nama_pelapor, d.ditugaskan_ke, d.status]);
-            doc.autoTable({ startY: 35, head: [['No', 'Alat', 'Lokasi', 'Masalah', 'Pelapor', 'Teknisi', 'Status']], body: tableData, theme: 'grid', styles: {fontSize: 8} });
+            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            const body = list.map((d, i) => [i+1, d.nama_alat, d.lokasi, d.isi_laporan, d.nama_pelapor, d.ditugaskan_ke, d.status]);
+            doc.autoTable({ startY: 20, head: [['No', 'Alat', 'Lokasi', 'Masalah', 'Pelapor', 'Teknisi', 'Status']], body: body });
             doc.save(`Laporan_IPSRS_${MODE_VIEW}.pdf`);
         }
 
-        function aktifkanRealtime() {
-            db.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'laporan_perbaikan' }, () => {
-                muatData();
-                new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{});
-            }).subscribe();
-        }
-
         function logout() { sessionStorage.clear(); location.reload(); }
-        if (sessionStorage.getItem('isLogged')) tampilkanDashboard();
+        if (sessionStorage.getItem('isAdmin')) tampilkanDashboard();
     </script>
 </body>
 </html>
