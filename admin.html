@@ -3,64 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin IPSRS - Compact Mode</title>
+    <title>Admin Dashboard IPSRS - RS Baptis</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; font-size: 11px; }
-        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .table-row-custom:hover { background-color: #f1f5f9; transition: all 0.2s; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <nav class="bg-blue-900 text-white sticky top-0 z-50">
-        <div class="max-w-full mx-auto px-4 py-1.5 flex justify-between items-center">
-            <h1 class="font-bold tracking-tighter">IPSRS BAPTIS <span class="text-blue-300 font-normal">| ADMIN PORTAL</span></h1>
-            <div class="flex gap-2">
-                <button onclick="downloadExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-2 py-0.5 rounded text-[10px]">📊 EXCEL</button>
-                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-2 py-0.5 rounded text-[10px]">🔄 REFRESH</button>
+    <nav class="bg-blue-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-full mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🛠️</span>
+                <h1 class="font-bold text-lg tracking-tight uppercase">Dashboard Admin <span class="text-blue-300">IPSRS</span></h1>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="downloadExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center gap-2">📊 EXPORT EXCEL</button>
+                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all">🔄 REFRESH DATA</button>
             </div>
         </div>
     </nav>
 
-    <main class="p-2">
-        <div class="flex gap-2 mb-3 overflow-x-auto pb-1">
-            <div onclick="filterData('Semua')" class="cursor-pointer bg-white px-3 py-1.5 rounded border border-slate-300 flex flex-col items-center min-w-[70px]">
-                <span class="text-[8px] font-bold text-slate-400">TOTAL</span>
-                <span id="stat-total" class="font-black text-sm">0</span>
+    <main class="p-6">
+        <div class="flex gap-4 mb-6 overflow-x-auto">
+            <div onclick="filterData('Semua')" class="cursor-pointer bg-white px-6 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-col min-w-[120px] hover:border-blue-500 transition-all">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Laporan</span>
+                <span id="stat-total" class="font-extrabold text-xl text-slate-700">0</span>
             </div>
-            <div onclick="filterData('Menunggu')" class="cursor-pointer bg-white px-3 py-1.5 rounded border-l-4 border-orange-500 flex flex-col items-center min-w-[70px]">
-                <span class="text-[8px] font-bold text-orange-500 uppercase italic">BARU</span>
-                <span id="stat-tunggu" class="font-black text-sm text-orange-600">0</span>
+            <div onclick="filterData('Menunggu')" class="cursor-pointer bg-white px-6 py-3 rounded-xl border-l-4 border-orange-500 shadow-sm flex flex-col min-w-[120px] hover:bg-orange-50 transition-all">
+                <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest italic">Baru</span>
+                <span id="stat-tunggu" class="font-extrabold text-xl text-orange-600">0</span>
             </div>
-            <div onclick="filterData('Proses')" class="cursor-pointer bg-white px-3 py-1.5 rounded border-l-4 border-blue-500 flex flex-col items-center min-w-[70px]">
-                <span class="text-[8px] font-bold text-blue-500 uppercase">PROSES</span>
-                <span id="stat-proses" class="font-black text-sm text-blue-600">0</span>
+            <div onclick="filterData('Proses')" class="cursor-pointer bg-white px-6 py-3 rounded-xl border-l-4 border-blue-500 shadow-sm flex flex-col min-w-[120px] hover:bg-blue-50 transition-all">
+                <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest italic">Proses</span>
+                <span id="stat-proses" class="font-extrabold text-xl text-blue-600">0</span>
             </div>
-            <div onclick="filterData('Selesai')" class="cursor-pointer bg-white px-3 py-1.5 rounded border-l-4 border-emerald-500 flex flex-col items-center min-w-[70px]">
-                <span class="text-[8px] font-bold text-emerald-500 uppercase">SELESAI</span>
-                <span id="stat-selesai" class="font-black text-sm text-emerald-600">0</span>
+            <div onclick="filterData('Selesai')" class="cursor-pointer bg-white px-6 py-3 rounded-xl border-l-4 border-emerald-500 shadow-sm flex flex-col min-w-[120px] hover:bg-emerald-50 transition-all">
+                <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest italic">Selesai</span>
+                <span id="stat-selesai" class="font-extrabold text-xl text-emerald-600">0</span>
             </div>
         </div>
 
-        <div class="bg-white rounded border border-slate-300 overflow-hidden shadow-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-200 border-b border-slate-300">
-                        <tr class="text-[9px] font-bold text-slate-600 uppercase">
-                            <th class="p-2 w-12 text-center">Foto</th>
-                            <th class="p-2 w-24 italic">Tgl/Waktu</th>
-                            <th class="p-2">Alat/Fasilitas</th>
-                            <th class="p-2">Lokasi</th>
-                            <th class="p-2 hidden md:table-cell">Laporan</th>
-                            <th class="p-2 w-16">Urgensi</th>
-                            <th class="p-2 w-16 text-center">Aksi</th>
+                    <thead>
+                        <tr class="bg-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                            <th class="px-6 py-4 w-20 text-center">Foto</th>
+                            <th class="px-4 py-4 w-32">Waktu Masuk</th>
+                            <th class="px-4 py-4 w-48">Alat / Fasilitas</th>
+                            <th class="px-4 py-4 w-40">Lokasi</th>
+                            <th class="px-4 py-4">Detail Laporan</th>
+                            <th class="px-4 py-4 w-32">Urgensi</th>
+                            <th class="px-4 py-4 w-44 text-center">Aksi Manajemen</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-laporan" class="divide-y divide-slate-200 bg-white">
+                    <tbody id="tabel-laporan" class="divide-y divide-slate-100 bg-white">
                         </tbody>
                 </table>
             </div>
@@ -75,7 +78,7 @@
 
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (error) return;
+            if (error) return alert("Gagal mengambil data: " + error.message);
             DATA_MASTER = data;
             updateStats();
             renderTable(data);
@@ -93,30 +96,41 @@
             tbody.innerHTML = '';
 
             list.forEach(l => {
-                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
-                let color = l.urgensi?.includes("Merah") ? "text-red-600 font-black" : (l.urgensi?.includes("Kuning") ? "text-orange-500" : "text-emerald-600");
-                let statusColor = l.status === 'Selesai' ? 'bg-green-100 text-green-700' : (l.status === 'Proses' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700');
+                const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                let urgensiWarna = l.urgensi?.includes("Merah") ? "text-red-600 font-extrabold shadow-sm bg-red-50 px-2 py-1 rounded" : (l.urgensi?.includes("Kuning") ? "text-orange-500 font-bold" : "text-emerald-600 font-bold");
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-blue-50 transition-all border-b border-slate-100">
-                    <td class="p-1 text-center">
+                <tr class="table-row-custom">
+                    <td class="px-6 py-3">
                         <a href="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" target="_blank">
-                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-8 h-8 object-cover rounded shadow-sm border border-slate-300">
+                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-lg border border-slate-200 hover:scale-125 transition-all shadow-sm cursor-zoom-in">
                         </a>
                     </td>
-                    <td class="p-2 text-[10px] text-slate-400 font-medium">${tgl}</td>
-                    <td class="p-2">
-                        <div class="font-bold text-slate-800 uppercase leading-none text-[10px]">${l.nama_alat}</div>
-                        <div class="text-[9px] text-slate-400 italic">Oleh: ${l.nama_pelapor}</div>
+                    <td class="px-4 py-3">
+                        <p class="text-[12px] font-semibold text-slate-700 leading-none">${tgl.split(' ')[0]}</p>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1 uppercase">${tgl.split(' ')[1]}</p>
                     </td>
-                    <td class="p-2 font-bold text-blue-600 text-[10px]">📍 ${l.lokasi}</td>
-                    <td class="p-2 hidden md:table-cell text-slate-500 text-[10px] max-w-xs truncate italic">"${l.isi_laporan || '-'}"</td>
-                    <td class="p-2 text-[9px] ${color}">${l.urgensi || 'NORMAL'}</td>
-                    <td class="p-2">
-                        <div class="flex gap-1 justify-center">
-                            <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}')" class="bg-emerald-50 text-emerald-600 p-1 rounded border border-emerald-200" title="WA">📱</button>
-                            <button onclick="updateStatus('${l.id}', 'Proses')" class="bg-blue-50 text-blue-600 p-1 rounded border border-blue-200" title="Proses">⚙️</button>
-                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-slate-100 text-slate-600 p-1 rounded border border-slate-300" title="Selesai">✅</button>
+                    <td class="px-4 py-3">
+                        <p class="font-bold text-slate-800 uppercase text-[13px] leading-tight">${l.nama_alat}</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5 italic">Oleh: ${l.nama_pelapor}</p>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="text-[12px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">📍 ${l.lokasi}</span>
+                    </td>
+                    <td class="px-4 py-3 text-[12px] text-slate-600 italic leading-relaxed">
+                        ${l.isi_laporan ? `"${l.isi_laporan}"` : '-'}
+                    </td>
+                    <td class="px-4 py-3 text-[11px] uppercase tracking-tighter">
+                        <span class="${urgensiWarna}">${l.urgensi || 'NORMAL'}</span>
+                        <div class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">${l.status}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-col gap-1.5">
+                            <div class="flex gap-1.5">
+                                <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}')" class="flex-1 bg-white text-emerald-600 font-bold text-[10px] py-1.5 rounded-md border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all">HUBUNGI WA</button>
+                                <button onclick="updateStatus('${l.id}', 'Proses')" class="flex-1 bg-white text-blue-600 font-bold text-[10px] py-1.5 rounded-md border border-blue-200 hover:bg-blue-600 hover:text-white transition-all uppercase italic">Proses</button>
+                            </div>
+                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="w-full bg-slate-800 text-white font-bold text-[10px] py-2 rounded-md hover:bg-emerald-600 transition-all uppercase tracking-widest">Selesaikan</button>
                         </div>
                     </td>
                 </tr>
@@ -132,7 +146,7 @@
         async function updateStatus(id, statusBaru) {
             let updateObj = { status: statusBaru };
             if(statusBaru === 'Proses') {
-                const n = prompt("Teknisi:");
+                const n = prompt("Tunjuk Teknisi Bertugas:");
                 if(!n) return;
                 updateObj.ditugaskan_ke = n;
             }
@@ -147,8 +161,8 @@
         function downloadExcel() {
             const ws = XLSX.utils.json_to_sheet(DATA_MASTER);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "IPSRS");
-            XLSX.writeFile(wb, "Rekap_IPSRS.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Laporan");
+            XLSX.writeFile(wb, "Laporan_IPSRS_Baptis.xlsx");
         }
 
         muatData();
