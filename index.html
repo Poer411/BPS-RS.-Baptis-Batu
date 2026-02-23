@@ -3,31 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapor BPS - RS. Baptis Batu</title>
+    <title>Lapor IPSRS - RS Baptis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .hidden-section { display: none; }
-        /* Mengurangi padding input agar lebih ringkas */
         input, textarea { padding: 0.75rem 1rem !important; font-size: 14px !important; }
     </style>
 </head>
-<body class="p-3 md:p-6">
+<body class="p-3">
 
-    <div id="login-pelapor" class="max-w-[340px] mx-auto mt-12 transition-all">
+    <div id="login-pelapor" class="max-w-[340px] mx-auto mt-12">
         <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 text-center">
             <div class="bg-indigo-50 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl">🏥</div>
             <h2 class="text-lg font-extrabold text-slate-800 uppercase tracking-tighter">Akses Pelapor</h2>
-            <p class="text-slate-400 text-[9px] font-bold tracking-widest mt-1 mb-6 uppercase italic">BPS-411 System</p>
-            
+            <p class="text-slate-400 text-[9px] font-bold tracking-widest mt-1 mb-6 uppercase">RS Baptis Batu</p>
             <div class="space-y-2">
                 <input type="text" id="user-pelapor" placeholder="USER" class="w-full bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center uppercase">
                 <input type="password" id="pass-pelapor" placeholder="PASS" class="w-full bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-center">
-                <button onclick="authPelapor()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-95 uppercase tracking-widest text-[10px] mt-2">Masuk</button>
+                <button onclick="authPelapor()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl shadow-md uppercase tracking-widest text-[10px] mt-2 active:scale-95 transition-all">Masuk</button>
             </div>
-            <p id="error-msg" class="text-red-500 text-[9px] font-black mt-3 hidden uppercase">⚠️ Salah!</p>
+            <p id="error-msg" class="text-red-500 text-[9px] font-black mt-3 hidden uppercase">⚠️ Username/Password Salah</p>
         </div>
     </div>
 
@@ -37,15 +35,14 @@
                 <h1 class="text-xl font-black text-slate-800 tracking-tighter uppercase leading-none">IPSRS <span class="text-indigo-600">BAPTIS</span></h1>
                 <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Form Pelaporan Cepat</p>
             </div>
-            <button onclick="logoutPelapor()" class="text-[9px] font-black text-slate-400 uppercase hover:text-red-500 transition-colors">Logout</button>
+            <button onclick="logoutPelapor()" class="text-[9px] font-black text-slate-400 uppercase">Logout</button>
         </header>
 
         <div class="bg-white p-5 rounded-[1.5rem] shadow-lg border border-slate-100 space-y-3">
             <div>
                 <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Nama Pelapor</label>
-                <input type="text" id="nama_pelapor" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold" placeholder="...">
+                <input type="text" id="nama_pelapor" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold" placeholder="Nama Anda">
             </div>
-
             <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Alat/Fasilitas</label>
@@ -56,21 +53,16 @@
                     <input type="text" id="lokasi" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-bold uppercase" placeholder="...">
                 </div>
             </div>
-
             <div>
                 <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Detail Kerusakan</label>
-                <textarea id="isi_laporan" rows="3" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-medium text-sm" placeholder="Jelaskan masalahnya..."></textarea>
+                <textarea id="isi_laporan" rows="3" class="w-full bg-slate-50 rounded-xl border-none focus:ring-1 focus:ring-indigo-500 font-medium text-sm" placeholder="Jelaskan kerusakannya..."></textarea>
             </div>
-
             <div>
                 <label class="text-[9px] font-black text-slate-400 uppercase ml-1 mb-1 block">Lampiran Foto</label>
                 <input type="file" id="foto_alat" accept="image/*" class="w-full text-[10px] text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:bg-slate-800 file:text-white cursor-pointer bg-slate-50 rounded-xl p-1">
             </div>
-
-            <button onclick="kirimLaporan()" id="btn-kirim" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-100 transition-all uppercase tracking-widest text-[11px] mt-2 active:bg-indigo-700">Kirim Ke IPSRS</button>
+            <button onclick="kirimLaporan()" id="btn-kirim" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest text-[11px] mt-2 active:bg-indigo-700">Kirim Ke IPSRS</button>
         </div>
-        
-        <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-4 tracking-[0.3em]">v2.0 Compact Edition</p>
     </div>
 
     <script>
@@ -84,9 +76,7 @@
             if (u === 'bps' && p === '411') {
                 localStorage.setItem('auth_pelapor', 'true');
                 tampilkanForm();
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
+            } else { document.getElementById('error-msg').classList.remove('hidden'); }
         }
 
         function tampilkanForm() {
@@ -94,58 +84,37 @@
             document.getElementById('form-pelaporan').classList.remove('hidden-section');
         }
 
-        function logoutPelapor() {
-            localStorage.removeItem('auth_pelapor');
-            location.reload();
-        }
+        function logoutPelapor() { localStorage.removeItem('auth_pelapor'); location.reload(); }
 
-        if (localStorage.getItem('auth_pelapor') === 'true') {
-            tampilkanForm();
-        }
+        if (localStorage.getItem('auth_pelapor') === 'true') { tampilkanForm(); }
 
         async function kirimLaporan() {
             const btn = document.getElementById('btn-kirim');
-            const n_pelapor = document.getElementById('nama_pelapor').value;
-            const n_alat = document.getElementById('nama_alat').value;
-            const lok = document.getElementById('lokasi').value;
-            const isi = document.getElementById('isi_laporan').value;
-            const fileFoto = document.getElementById('foto_alat').files[0];
+            const data = {
+                nama_pelapor: document.getElementById('nama_pelapor').value,
+                nama_alat: document.getElementById('nama_alat').value,
+                lokasi: document.getElementById('lokasi').value,
+                isi_laporan: document.getElementById('isi_laporan').value,
+                fileFoto: document.getElementById('foto_alat').files[0]
+            };
 
-            if (!n_pelapor || !n_alat || !lok || !isi || !fileFoto) {
-                alert('Lengkapi data & foto!');
-                return;
+            if (!data.nama_pelapor || !data.nama_alat || !data.lokasi || !data.isi_laporan || !data.fileFoto) {
+                alert('Lengkapi data & foto!'); return;
             }
 
-            btn.innerText = 'PROSES...';
-            btn.disabled = true;
+            btn.innerText = 'MENGIRIM...'; btn.disabled = true;
 
-            const namaFile = `${Date.now()}_${fileFoto.name}`;
-            const { data: uploadData, error: uploadError } = await db.storage
-                .from('foto_alat')
-                .upload(namaFile, fileFoto);
-
+            const namaFile = `${Date.now()}_${data.fileFoto.name}`;
+            const { error: uploadError } = await db.storage.from('foto_alat').upload(namaFile, data.fileFoto);
             if (uploadError) { alert('Gagal Upload'); btn.disabled = false; return; }
 
-            const { error: insertError } = await db.from('laporan_perbaikan').insert([
-                { 
-                    nama_pelapor: n_pelapor, 
-                    nama_alat: n_alat, 
-                    lokasi: lok, 
-                    isi_laporan: isi, 
-                    foto_url: namaFile,
-                    status: 'Menunggu'
-                }
-            ]);
+            const { error: insertError } = await db.from('laporan_perbaikan').insert([{ 
+                ...data, foto_url: namaFile, status: 'Menunggu', fileFoto: undefined 
+            }]);
 
-            if (!insertError) {
-                alert('Terkirim!');
-                location.reload();
-            } else {
-                alert('Gagal!');
-                btn.disabled = false;
-            }
+            if (!insertError) { alert('Terkirim!'); location.reload(); }
+            else { alert('Gagal!'); btn.disabled = false; }
         }
     </script>
 </body>
 </html>
-
