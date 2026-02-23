@@ -3,90 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS Pro</title>
+    <title>Dashboard Admin IPSRS - RS Baptis</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
 
-    <nav class="bg-blue-900 text-white p-4 shadow-xl sticky top-0 z-20">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-            <h1 class="font-black text-xl flex items-center gap-2">🛠️ IPSRS BAPTIS ADMIN PRO</h1>
+    <nav class="bg-blue-900 text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🛠️</span>
+                <div>
+                    <h1 class="font-black leading-none text-lg">ADMIN IPSRS</h1>
+                    <p class="text-[10px] font-bold text-blue-300 tracking-widest uppercase">RS Baptis Batu</p>
+                </div>
+            </div>
             <div class="flex gap-2">
-                <button onclick="downloadExcel()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">📊 EXCEL</button>
-                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold text-sm">🔄 REFRESH</button>
+                <button onclick="downloadExcel()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
+                    📊 EXPORT EXCEL
+                </button>
+                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">
+                    🔄 REFRESH
+                </button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-4">
-        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button onclick="filterData('Semua')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm hover:bg-blue-50 focus:bg-blue-600 focus:text-white transition-all">Semua</button>
-            <button onclick="filterData('Menunggu')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-orange-500 hover:bg-orange-50">Menunggu</button>
-            <button onclick="filterData('Proses')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-blue-500 hover:bg-blue-50">Proses</button>
-            <button onclick="filterData('Selesai')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-green-500 hover:bg-green-50">Selesai</button>
+    <main class="max-w-7xl mx-auto p-4 lg:p-6">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div onclick="filterData('Semua')" class="cursor-pointer bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-500 transition-all text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total Laporan</p>
+                <h3 id="stat-total" class="text-2xl font-black">0</h3>
+            </div>
+            <div onclick="filterData('Menunggu')" class="cursor-pointer bg-white p-4 rounded-2xl shadow-sm border-l-4 border-orange-500 hover:bg-orange-50 transition-all text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">🔴 Belum Dicek</p>
+                <h3 id="stat-tunggu" class="text-2xl font-black text-orange-600">0</h3>
+            </div>
+            <div onclick="filterData('Proses')" class="cursor-pointer bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500 hover:bg-blue-50 transition-all text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">🔵 Proses</p>
+                <h3 id="stat-proses" class="text-2xl font-black text-blue-600">0</h3>
+            </div>
+            <div onclick="filterData('Selesai')" class="cursor-pointer bg-white p-4 rounded-2xl shadow-sm border-l-4 border-emerald-500 hover:bg-emerald-50 transition-all text-center">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">🟢 Selesai</p>
+                <h3 id="stat-selesai" class="text-2xl font-black text-emerald-600">0</h3>
+            </div>
+        </div>
+
+        <div id="loading" class="text-center py-20 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent"></div>
+            <p class="mt-4 font-bold text-slate-400 tracking-widest">MENYINKRONKAN DATA...</p>
         </div>
 
         <div id="container-laporan" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
+
     </main>
 
     <script>
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
-        let SEMUA_DATA = [];
+        let DATA_MASTER = [];
 
         async function muatData() {
-            const container = document.getElementById('container-laporan');
-            container.innerHTML = '<p class="col-span-full text-center p-20 font-bold text-slate-400">Memuat data IPSRS...</p>';
-            
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('container-laporan').innerHTML = '';
+
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (error) return alert(error.message);
             
-            SEMUA_DATA = data;
+            document.getElementById('loading').classList.add('hidden');
+            if (error) return alert("Error: " + error.message);
+
+            DATA_MASTER = data;
+            updateStats();
             renderCards(data);
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = DATA_MASTER.length;
+            document.getElementById('stat-tunggu').innerText = DATA_MASTER.filter(d => d.status === 'Menunggu').length;
+            document.getElementById('stat-proses').innerText = DATA_MASTER.filter(d => d.status === 'Proses').length;
+            document.getElementById('stat-selesai').innerText = DATA_MASTER.filter(d => d.status === 'Selesai').length;
         }
 
         function renderCards(list) {
             const container = document.getElementById('container-laporan');
             container.innerHTML = '';
 
+            if(list.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-20 text-slate-400 font-medium">Tidak ada laporan ditemukan.</div>';
+                return;
+            }
+
             list.forEach(l => {
                 const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-                const warnaUrgensi = l.urgensi?.includes('Merah') ? 'bg-red-600' : (l.urgensi?.includes('Kuning') ? 'bg-orange-500' : 'bg-green-500');
+                
+                // Urgensi Warna
+                let warnaUrgensi = "bg-slate-500";
+                if(l.urgensi?.includes("Merah")) warnaUrgensi = "bg-red-600 animate-pulse";
+                if(l.urgensi?.includes("Kuning")) warnaUrgensi = "bg-orange-500";
+                if(l.urgensi?.includes("Hijau")) warnaUrgensi = "bg-emerald-500";
 
                 container.innerHTML += `
-                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col transition-all hover:shadow-xl">
-                    <div class="relative h-48 bg-slate-200">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-xl transition-all border-b-4 ${l.status === 'Selesai' ? 'border-emerald-500' : 'border-blue-900'}">
+                    <div class="relative h-48">
                         <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-full h-full object-cover">
-                        <div class="absolute top-3 left-3 ${warnaUrgensi} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">
-                            ${l.urgensi || 'NORMAL'}
+                        <div class="absolute top-4 left-4 ${warnaUrgensi} text-white text-[9px] font-black px-3 py-1 rounded-full shadow-lg">
+                            ${(l.urgensi || 'PRIORITAS NORMAL').toUpperCase()}
+                        </div>
+                        <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm">
+                            📍 ${l.lokasi}
                         </div>
                     </div>
-                    <div class="p-5 flex-1">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="font-black text-slate-800 uppercase text-lg leading-tight">${l.nama_alat}</h3>
-                                <p class="text-blue-600 font-bold text-xs italic">📍 ${l.lokasi}</p>
-                            </div>
+                    
+                    <div class="p-5 flex-1 flex flex-col">
+                        <div class="mb-3">
+                            <h3 class="text-lg font-black text-slate-800 leading-tight uppercase">${l.nama_alat}</h3>
+                            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase">${tgl} • OLEH: ${l.nama_pelapor}</p>
                         </div>
-                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border mb-4">${l.isi_laporan || 'Tidak ada detail.'}</p>
-                        <div class="text-[10px] text-slate-400 font-bold mb-4">
-                            PELAPOR: ${l.nama_pelapor} <br>
-                            WAKTU: ${tgl}
+
+                        <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl mb-4 text-sm text-slate-600 flex-1 italic">
+                            "${l.isi_laporan || 'Tanpa keterangan detail.'}"
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}', '${l.lokasi}')" class="flex-1 bg-green-100 text-green-700 text-[10px] font-black py-2 rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition-all">HUBUNGI</button>
-                            <button onclick="updateStatus('${l.id}', 'Proses')" class="flex-1 bg-blue-100 text-blue-700 text-[10px] font-black py-2 rounded-lg border border-blue-200 hover:bg-blue-600 hover:text-white transition-all">KERJAKAN</button>
-                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="flex-1 bg-slate-100 text-slate-700 text-[10px] font-black py-2 rounded-lg border border-slate-200 hover:bg-green-500 hover:text-white transition-all">SELESAI</button>
+
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}')" class="bg-emerald-50 text-emerald-700 font-black text-[10px] py-3 rounded-xl border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all">HUBUNGI WA</button>
+                            <button onclick="updateStatus('${l.id}', 'Proses')" class="bg-blue-50 text-blue-700 font-black text-[10px] py-3 rounded-xl border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase">Kerjakan</button>
                         </div>
+                        
+                        <button onclick="updateStatus('${l.id}', 'Selesai')" class="w-full bg-slate-900 text-white font-black text-xs py-3 rounded-xl hover:bg-emerald-600 transition-all uppercase tracking-widest">Selesaikan Laporan</button>
                     </div>
-                    <div class="bg-slate-50 p-3 text-center border-t">
-                         <span class="text-[10px] font-black ${l.status === 'Selesai' ? 'text-green-600' : 'text-orange-500'}">STATUS: ${l.status.toUpperCase()}</span>
-                         <p class="text-[9px] text-slate-400 font-bold uppercase">Teknisi: ${l.ditugaskan_ke || '-'}</p>
+
+                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                        <span class="text-[9px] font-black uppercase ${l.status === 'Selesai' ? 'text-emerald-600' : 'text-orange-500'}">Status: ${l.status}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase italic">Teknisi: ${l.ditugaskan_ke || 'Belum Ada'}</span>
                     </div>
                 </div>
                 `;
@@ -94,29 +148,35 @@
         }
 
         function filterData(status) {
-            if (status === 'Semua') renderCards(SEMUA_DATA);
-            else renderCards(SEMUA_DATA.filter(d => d.status === status));
-        }
-
-        function hubungiWA(nama, alat, lokasi) {
-            const pesan = `Halo ${nama}, ini tim IPSRS RS Baptis Batu terkait laporan kerusakan ${alat} di ${lokasi}. Kami sedang menindaklanjuti laporan Anda.`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(pesan)}`, '_blank');
+            if (status === 'Semua') renderCards(DATA_MASTER);
+            else renderCards(DATA_MASTER.filter(d => d.status === status));
         }
 
         async function updateStatus(id, statusBaru) {
-            const teknisi = statusBaru === 'Proses' ? prompt("Siapa teknisi yang bertugas?") : null;
-            const updateData = { status: statusBaru };
-            if (teknisi) updateData.ditugaskan_ke = teknisi;
+            let updateObj = { status: statusBaru };
+            
+            if(statusBaru === 'Proses') {
+                const namaTeknisi = prompt("Masukkan Nama Teknisi yang ditugaskan:");
+                if(!namaTeknisi) return;
+                updateObj.ditugaskan_ke = namaTeknisi;
+            }
 
-            const { error } = await db.from('laporan_perbaikan').update(updateData).eq('id', id);
-            if (!error) muatData();
+            const { error } = await db.from('laporan_perbaikan').update(updateObj).eq('id', id);
+            if (error) alert(error.message);
+            else muatData();
+        }
+
+        function hubungiWA(nama, alat) {
+            const pesan = encodeURIComponent(`Halo ${nama}, kami dari IPSRS RS Baptis ingin mengonfirmasi laporan kerusakan ${alat}. Mohon info lanjut jika ada tambahan.`);
+            window.open(`https://wa.me/?text=${pesan}`, '_blank');
         }
 
         function downloadExcel() {
-            const worksheet = XLSX.utils.json_to_sheet(SEMUA_DATA);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan_IPSRS");
-            XLSX.writeFile(workbook, `Laporan_IPSRS_BAPTIS_${new Date().toLocaleDateString()}.xlsx`);
+            if(DATA_MASTER.length === 0) return alert("Data kosong!");
+            const ws = XLSX.utils.json_to_sheet(DATA_MASTER);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Laporan");
+            XLSX.writeFile(wb, `IPSRS_BAPTIS_REKAP_${new Date().toLocaleDateString()}.xlsx`);
         }
 
         muatData();
