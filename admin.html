@@ -3,116 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS</title>
+    <title>Admin Dashboard IPSRS Pro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.min.js"></script>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-100 min-h-screen">
 
-    <nav class="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-10">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="font-black text-xl flex items-center gap-2">🛠️ ADMIN IPSRS</h1>
-            <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold text-sm transition-all">🔄 REFRESH DATA</button>
+    <nav class="bg-blue-900 text-white p-4 shadow-xl sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <h1 class="font-black text-xl flex items-center gap-2">🛠️ IPSRS BAPTIS ADMIN PRO</h1>
+            <div class="flex gap-2">
+                <button onclick="downloadExcel()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">📊 EXCEL</button>
+                <button onclick="muatData()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-bold text-sm">🔄 REFRESH</button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-4 md:p-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Menunggu</p>
-                <h3 id="stat-tunggu" class="text-2xl font-black text-slate-700">0</h3>
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Proses</p>
-                <h3 id="stat-proses" class="text-2xl font-black text-slate-700">0</h3>
-            </div>
+    <main class="max-w-7xl mx-auto p-4">
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <button onclick="filterData('Semua')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm hover:bg-blue-50 focus:bg-blue-600 focus:text-white transition-all">Semua</button>
+            <button onclick="filterData('Menunggu')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-orange-500 hover:bg-orange-50">Menunggu</button>
+            <button onclick="filterData('Proses')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-blue-500 hover:bg-blue-50">Proses</button>
+            <button onclick="filterData('Selesai')" class="bg-white px-6 py-2 rounded-full shadow-sm font-bold text-sm border-l-4 border-green-500 hover:bg-green-50">Selesai</button>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Waktu & Pelapor</th>
-                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Alat & Detail</th>
-                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Foto</th>
-                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Status & Teknisi</th>
-                            <th class="p-4 text-xs font-bold text-slate-500 uppercase">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-laporan" class="divide-y divide-slate-100">
-                        </tbody>
-                </table>
+        <div id="container-laporan" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
-        </div>
     </main>
 
     <script>
         const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
         const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
         const db = supabase.createClient(URL_PROYEK, KEY_ANON);
+        let SEMUA_DATA = [];
 
         async function muatData() {
-            const tbody = document.getElementById('tabel-laporan');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse font-bold">Mengambil data dari server...</td></tr>';
-
+            const container = document.getElementById('container-laporan');
+            container.innerHTML = '<p class="col-span-full text-center p-20 font-bold text-slate-400">Memuat data IPSRS...</p>';
+            
             const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
+            if (error) return alert(error.message);
+            
+            SEMUA_DATA = data;
+            renderCards(data);
+        }
 
-            if (error) return alert("Gagal muat data: " + error.message);
+        function renderCards(list) {
+            const container = document.getElementById('container-laporan');
+            container.innerHTML = '';
 
-            tbody.innerHTML = '';
-            let tunggu = 0, proses = 0;
-
-            data.forEach(l => {
-                if(l.status === 'Menunggu') tunggu++;
-                if(l.status === 'Proses') proses++;
-
+            list.forEach(l => {
                 const tgl = new Date(l.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-                
-                tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition-all">
-                    <td class="p-4">
-                        <p class="text-[10px] text-slate-400 font-bold">${tgl}</p>
-                        <p class="font-bold text-slate-700">${l.nama_pelapor}</p>
-                        <p class="text-xs text-blue-600 font-medium">📍 ${l.lokasi}</p>
-                    </td>
-                    <td class="p-4">
-                        <p class="font-bold text-slate-800">${l.nama_alat}</p>
-                        <p class="text-xs text-slate-500 mt-1">${l.isi_laporan || '-'}</p>
-                    </td>
-                    <td class="p-4">
-                        <a href="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" target="_blank">
-                            <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-16 h-16 object-cover rounded-lg border hover:scale-110 transition-all">
-                        </a>
-                    </td>
-                    <td class="p-4 text-xs">
-                        <span class="px-2 py-1 rounded-full font-bold ${l.status === 'Selesai' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}">${l.status}</span>
-                        <p class="mt-2 font-medium text-slate-400 italic">Oleh: ${l.ditugaskan_ke || 'Belum ditunjuk'}</p>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex flex-col gap-2">
-                            <button onclick="updateStatus('${l.id}', 'Proses')" class="bg-blue-50 text-blue-700 text-[10px] font-bold py-1 px-2 rounded border border-blue-200">KERJAKAN</button>
-                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="bg-green-50 text-green-700 text-[10px] font-bold py-1 px-2 rounded border border-green-200">SELESAI</button>
+                const warnaUrgensi = l.urgensi?.includes('Merah') ? 'bg-red-600' : (l.urgensi?.includes('Kuning') ? 'bg-orange-500' : 'bg-green-500');
+
+                container.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col transition-all hover:shadow-xl">
+                    <div class="relative h-48 bg-slate-200">
+                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-full h-full object-cover">
+                        <div class="absolute top-3 left-3 ${warnaUrgensi} text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">
+                            ${l.urgensi || 'NORMAL'}
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                    <div class="p-5 flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-black text-slate-800 uppercase text-lg leading-tight">${l.nama_alat}</h3>
+                                <p class="text-blue-600 font-bold text-xs italic">📍 ${l.lokasi}</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border mb-4">${l.isi_laporan || 'Tidak ada detail.'}</p>
+                        <div class="text-[10px] text-slate-400 font-bold mb-4">
+                            PELAPOR: ${l.nama_pelapor} <br>
+                            WAKTU: ${tgl}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="hubungiWA('${l.nama_pelapor}', '${l.nama_alat}', '${l.lokasi}')" class="flex-1 bg-green-100 text-green-700 text-[10px] font-black py-2 rounded-lg border border-green-200 hover:bg-green-600 hover:text-white transition-all">HUBUNGI</button>
+                            <button onclick="updateStatus('${l.id}', 'Proses')" class="flex-1 bg-blue-100 text-blue-700 text-[10px] font-black py-2 rounded-lg border border-blue-200 hover:bg-blue-600 hover:text-white transition-all">KERJAKAN</button>
+                            <button onclick="updateStatus('${l.id}', 'Selesai')" class="flex-1 bg-slate-100 text-slate-700 text-[10px] font-black py-2 rounded-lg border border-slate-200 hover:bg-green-500 hover:text-white transition-all">SELESAI</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-3 text-center border-t">
+                         <span class="text-[10px] font-black ${l.status === 'Selesai' ? 'text-green-600' : 'text-orange-500'}">STATUS: ${l.status.toUpperCase()}</span>
+                         <p class="text-[9px] text-slate-400 font-bold uppercase">Teknisi: ${l.ditugaskan_ke || '-'}</p>
+                    </div>
+                </div>
                 `;
             });
+        }
 
-            document.getElementById('stat-tunggu').innerText = tunggu;
-            document.getElementById('stat-proses').innerText = proses;
+        function filterData(status) {
+            if (status === 'Semua') renderCards(SEMUA_DATA);
+            else renderCards(SEMUA_DATA.filter(d => d.status === status));
+        }
+
+        function hubungiWA(nama, alat, lokasi) {
+            const pesan = `Halo ${nama}, ini tim IPSRS RS Baptis Batu terkait laporan kerusakan ${alat} di ${lokasi}. Kami sedang menindaklanjuti laporan Anda.`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(pesan)}`, '_blank');
         }
 
         async function updateStatus(id, statusBaru) {
             const teknisi = statusBaru === 'Proses' ? prompt("Siapa teknisi yang bertugas?") : null;
-            
             const updateData = { status: statusBaru };
             if (teknisi) updateData.ditugaskan_ke = teknisi;
 
             const { error } = await db.from('laporan_perbaikan').update(updateData).eq('id', id);
-            if (error) alert("Gagal update: " + error.message);
-            else muatData();
+            if (!error) muatData();
+        }
+
+        function downloadExcel() {
+            const worksheet = XLSX.utils.json_to_sheet(SEMUA_DATA);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan_IPSRS");
+            XLSX.writeFile(workbook, `Laporan_IPSRS_BAPTIS_${new Date().toLocaleDateString()}.xlsx`);
         }
 
         muatData();
