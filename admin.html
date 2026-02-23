@@ -153,33 +153,36 @@
         }
 
 function kirimKeWA(id) {
-    const l = MASTER_DATA.find(x => x.id === id);
-    const t = DAFTAR_TEKNISI.find(x => x.nama === l.ditugaskan_ke);
+    console.log("Memicu WA untuk ID:", id); // Untuk cek di console (F12)
 
-    if (t && l) {
-        // 1. Bersihkan nomor (takutnya ada spasi atau karakter aneh)
-        const cleanPhone = t.wa.replace(/\D/g, ''); 
-        
-        // 2. Susun Pesan
-        const text = `*TUGAS PERBAIKAN IPSRS*%0A` +
-                     `----------------------------%0A` +
-                     `*Alat:* ${l.nama_alat.toUpperCase()}%0A` +
-                     `*Lokasi:* ${l.lokasi.toUpperCase()}%0A` +
-                     `*Masalah:* _${l.isi_laporan}_%0A` +
-                     `*Pelapor:* ${l.nama_pelapor}%0A` +
-                     `----------------------------%0A` +
-                     `_Mohon segera ditindaklanjuti._`;
-
-        // 3. Gunakan Link WA Universal
-        const url = `https://wa.me/${cleanPhone}?text=${text}`;
-        
-        // 4. METODE TEMBAK LANGSUNG (Chrome Friendly)
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.click();
+    // 1. Cari data laporan langsung dari MASTER_DATA
+    const l = MASTER_DATA.find(x => x.id == id);
+    if (!l) {
+        alert("Data laporan tidak ditemukan!");
+        return;
     }
+
+    // 2. Cari data teknisi
+    const t = DAFTAR_TEKNISI.find(x => x.nama === l.ditugaskan_ke);
+    if (!t) {
+        alert("Pilih nama teknisi dulu, lalu klik simpan/pilih!");
+        return;
+    }
+
+    // 3. Susun Pesan (Tanpa karakter aneh agar tidak error di URL)
+    const pesan = "TUGAS IPSRS: " + l.nama_alat + " di " + l.lokasi + ". Masalah: " + l.isi_laporan;
+    const urlWA = "https://api.whatsapp.com/send?phone=" + t.wa + "&text=" + encodeURIComponent(pesan);
+
+    // 4. METODE TERKUAT: Gunakan window.location untuk memaksa browser berpindah
+    console.log("Membuka URL:", urlWA);
+    
+    // Jika window.open diblokir, ini akan tetap jalan:
+    const link = document.createElement('a');
+    link.href = urlWA;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
         async function updateStatus(id, stat) {
             if(confirm("Pekerjaan sudah selesai?")) {
@@ -207,4 +210,5 @@ function kirimKeWA(id) {
     </script>
 </body>
 </html>
+
 
