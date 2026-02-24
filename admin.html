@@ -7,9 +7,11 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-body { margin:0; font-family: Inter, sans-serif; }
+body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 .fade-in { animation: fade .25s ease-in-out; }
 @keyframes fade { from {opacity:0} to {opacity:1} }
 </style>
@@ -17,33 +19,42 @@ body { margin:0; font-family: Inter, sans-serif; }
 
 <body class="bg-slate-100">
 
-<div class="min-h-screen flex flex-col">
-
-<!-- HEADER -->
-<header class="bg-white shadow px-6 py-4 flex justify-between items-center">
-<h1 class="font-black text-lg">
-🛠️ IPSRS - RS Baptis Batu
-</h1>
-<span class="text-sm text-slate-400">Realtime Monitoring</span>
-</header>
-
-<!-- CONTENT -->
-<main class="p-6 flex-1">
-
-<div class="flex justify-between items-center mb-6">
-<h2 class="text-xl font-bold">
-Total Laporan:
-<span id="totalCount" class="text-indigo-600">0</span>
-</h2>
-
-<select id="filterStatus"
-class="border rounded-lg px-3 py-2">
-<option value="Aktif">Aktif</option>
-<option value="Selesai">Selesai</option>
-</select>
+<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4 transition-all">
+    <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
+        <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">RS Baptis Batu</p>
+        <div class="space-y-4">
+            <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
+            <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
+            <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase shadow-lg shadow-indigo-200 transition-all active:scale-95">Masuk Sekarang</button>
+        </div>
+    </div>
 </div>
 
-<div class="bg-white rounded-2xl shadow overflow-hidden">
+<div id="admin-dashboard" class="hidden flex flex-col min-h-screen">
+
+<header class="bg-white shadow px-6 py-4 flex justify-between items-center">
+<h1 class="font-black text-lg">🛠️ IPSRS - RS Baptis Batu</h1>
+<div class="flex gap-2">
+<button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Export PDF</button>
+<button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-4 py-2 rounded-xl uppercase hover:bg-slate-50">Logout</button>
+</div>
+</header>
+
+<div class="p-6 flex flex-col gap-4 flex-1 overflow-auto">
+
+<div class="flex justify-between items-center">
+<div class="flex gap-2 bg-white p-1.5 rounded-2xl border shadow-sm">
+<button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all">ANTRIAN AKTIF</button>
+<button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all">RIWAYAT SELESAI</button>
+</div>
+<div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200">
+<p class="text-[9px] font-bold text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
+<span id="stat-count" class="text-2xl font-black text-indigo-600 leading-none">0</span>
+</div>
+</div>
+
+<div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
 <table class="w-full text-sm">
 <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
 <tr>
@@ -52,144 +63,155 @@ class="border rounded-lg px-3 py-2">
 <th class="p-4 text-left">Lokasi</th>
 <th class="p-4 text-left">Masalah</th>
 <th class="p-4 text-left">Urgensi</th>
-<th class="p-4 text-left">Status</th>
+<th class="p-4 text-left">Teknisi</th>
+<th class="p-4 text-left">Status / Catatan</th>
+<th class="p-4 text-left">Kirim</th>
 </tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody id="tabel-laporan"></tbody>
 </table>
 </div>
 
-</main>
+</div>
 </div>
 
 <script>
+const URL_PROYEK = "https://hcqyfhndihjpuihjzusx.supabase.co";
+const KEY_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
+const TG_TOKEN = "MASUKAN_TOKEN_TELEGRAM"; // Ganti dengan token bot Telegram Anda
+const TG_CHAT_ID = "MASUKAN_CHAT_ID"; // Ganti dengan chat_id grup / teknisi jika pakai Telegram
+const DAFTAR_TEKNISI = ["DIDIT","SUSANTO","LUCIA","ROKIM","BAMBANG","PURNOMO","TWIN"];
+const TEKNISI_HP = {
+  "DIDIT":"081331755209",
+  "SUSANTO":"089668467140",
+  "LUCIA":"085708203992",
+  "ROKIM":"085806690875",
+  "BAMBANG":"08980506696",
+  "PURNOMO":"085100332530",
+  "TWIN":"085646405019"
+};
 
-/* ===============================
-   KONFIGURASI SUPABASE
-================================ */
+let db;
+let MASTER_DATA = [];
+let MODE_VIEW = 'Aktif';
 
-const SUPABASE_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
+window.onload = function(){
+  db = supabase.createClient(URL_PROYEK, KEY_ANON);
+  console.log("Supabase Ready");
+};
 
-const supabaseClient = supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
-);
-
-let DATA = [];
-
-/* ===============================
-   INIT
-================================ */
-
-document.addEventListener("DOMContentLoaded", () => {
-fetchData();
-setupRealtime();
-document.getElementById("filterStatus")
-.addEventListener("change", renderData);
-});
-
-/* ===============================
-   FETCH DATA
-================================ */
-
-async function fetchData() {
-
-const { data, error } = await supabaseClient
-.from("laporan_perbaikan")
-.select("*")
-.order("created_at", { ascending:false });
-
-if (error) {
-console.error("Supabase Error:", error);
-alert("Gagal ambil data: " + error.message);
-return;
+function cekLogin(){
+  const u = document.getElementById('user-input').value.trim();
+  const p = document.getElementById('pass-input').value.trim();
+  if(u==="admin" && p==="admin123"){
+    document.getElementById('login-panel').style.display='none';
+    document.getElementById('admin-dashboard').classList.remove('hidden');
+    muatData();
+    aktifkanRealtime();
+  } else alert("Username / Password salah!");
 }
 
-DATA = data || [];
-renderData();
+async function muatData(){
+  const { data,error } = await db.from('laporan_perbaikan').select('*').order('created_at',{ascending:false});
+  if(!error){
+    MASTER_DATA = data || [];
+    renderTable();
+  }
 }
 
-/* ===============================
-   RENDER TABLE
-================================ */
+function renderTable(){
+  const tbody = document.getElementById('tabel-laporan');
+  let list = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai') : MASTER_DATA.filter(d=>d.status==='Selesai');
+  document.getElementById('stat-count').innerText = list.length;
+  tbody.innerHTML = '';
+  list.forEach(l=>{
+    const tgl = new Date(l.created_at);
+    const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+" - "+tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    let optT = '<option value="">-- Pilih --</option>';
+    DAFTAR_TEKNISI.forEach(t=>optT+=`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`);
 
-function renderData() {
-
-const filter = document.getElementById("filterStatus").value;
-const tbody = document.getElementById("tableBody");
-
-let filtered = filter === "Aktif"
-? DATA.filter(d => d.status !== "Selesai")
-: DATA.filter(d => d.status === "Selesai");
-
-document.getElementById("totalCount").innerText =
-filtered.length;
-
-tbody.innerHTML = "";
-
-const fragment = document.createDocumentFragment();
-
-filtered.forEach(item => {
-
-const tr = document.createElement("tr");
-tr.className = "border-t hover:bg-slate-50 fade-in";
-
-tr.innerHTML = `
-<td class="p-4">
-${item.created_at
-? new Date(item.created_at).toLocaleString("id-ID")
-: "-"}
+    tbody.innerHTML+=`
+<tr class="hover:bg-slate-50 border-b transition-all">
+<td class="p-2">${jam}</td>
+<td class="p-2 font-bold">${l.nama_alat}</td>
+<td class="p-2">${l.lokasi}</td>
+<td class="p-2 text-slate-600">${l.isi_laporan}</td>
+<td class="p-2">
+<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="border rounded-lg p-1">
+<option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
+<option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
+<option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
+</select>
 </td>
-
-<td class="p-4 font-semibold">
-${item.nama_alat || "-"}
+<td class="p-2">
+<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="border rounded-lg p-1">
+${optT}
+</select>
 </td>
-
-<td class="p-4">
-${item.lokasi || "-"}
+<td class="p-2">
+<input type="text" placeholder="Catatan..." value="${l.catatan||''}" onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">
+<button onclick="updateDb('${l.id}',{status:'Selesai'})" class="bg-slate-800 text-white text-[10px] px-2 py-1 rounded mt-1">Selesai</button>
 </td>
-
-<td class="p-4 text-slate-600">
-${item.isi_laporan || "-"}
+<td class="p-2 flex gap-1">
+<button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white px-2 py-1 rounded">Telegram</button>
+<button onclick="kirimWA('${l.id}')" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</button>
 </td>
-
-<td class="p-4">
-<span class="px-2 py-1 rounded-full text-xs
-${item.urgensi === "Darurat" ? "bg-red-100 text-red-600" :
-item.urgensi === "Segera" ? "bg-yellow-100 text-yellow-600" :
-"bg-green-100 text-green-600"}">
-${item.urgensi || "Biasa"}
-</span>
-</td>
-
-<td class="p-4">
-${item.status || "Baru"}
-</td>
-`;
-
-fragment.appendChild(tr);
-});
-
-tbody.appendChild(fragment);
+</tr>
+    `;
+  });
 }
 
-/* ===============================
-   REALTIME LISTENER
-================================ */
-
-function setupRealtime() {
-
-supabaseClient.channel("realtime")
-.on("postgres_changes", {
-event:"*",
-schema:"public",
-table:"laporan_perbaikan"
-}, fetchData)
-.subscribe();
-
+async function updateDb(id,dataUpdate){
+  await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
+  muatData();
 }
 
+async function kirimTelegram(id){
+  const l = MASTER_DATA.find(x=>x.id==id);
+  if(!l.ditugaskan_ke) return alert("Pilih teknisi dulu!");
+  const msg=`🎯 *PENUGASAN IPSRS*
+👷 *Petugas:* ${l.ditugaskan_ke}
+🛠️ *Alat:* ${l.nama_alat}
+📍 *Lokasi:* ${l.lokasi}
+📝 *Masalah:* ${l.isi_laporan}
+⚠️ *Urgensi:* ${l.urgensi.toUpperCase()}`;
+  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=Markdown`);
+  alert("🚀 Pesan Telegram terkirim ke teknisi!");
+}
+
+function kirimWA(id){
+  const l = MASTER_DATA.find(x=>x.id==id);
+  if(!l.ditugaskan_ke) return alert("Pilih teknisi dulu!");
+  const nomor = TEKNISI_HP[l.ditugaskan_ke];
+  const msg=`PENUGASAN IPSRS
+Petugas: ${l.ditugaskan_ke}
+Alat: ${l.nama_alat}
+Lokasi: ${l.lokasi}
+Masalah: ${l.isi_laporan}
+Urgensi: ${l.urgensi}`;
+  window.open(`https://wa.me/${nomor}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+
+function setMode(m){
+  MODE_VIEW=m;
+  document.getElementById('btn-mode-aktif').className = m==='Aktif'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
+  document.getElementById('btn-mode-selesai').className = m==='Selesai'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
+  renderTable();
+}
+
+function exportKePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('l','mm','a4');
+  const dataFilter = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai'): MASTER_DATA.filter(d=>d.status==='Selesai');
+  const rows = dataFilter.map((l,i)=>[i+1,new Date(l.created_at).toLocaleString('id-ID'),l.nama_alat,l.lokasi,l.isi_laporan,l.urgensi,l.ditugaskan_ke,l.catatan||'']);
+  doc.text(`LAPORAN IPSRS - ${MODE_VIEW}`,14,15);
+  doc.autoTable({startY:20,head:[['NO','WAKTU','ALAT','LOKASI','MASALAH','URGENSI','TEKNISI','CATATAN']],body:rows,styles:{fontSize:7}});
+  doc.save(`Laporan_${MODE_VIEW}.pdf`);
+}
+
+function aktifkanRealtime(){
+  db.channel('any').on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=>muatData()).subscribe();
+}
 </script>
 
 </body>
