@@ -105,6 +105,15 @@ async function muatData(){
   }
 }
 
+function klikSelesai(id){
+  const catatanInput = document.getElementById('catatan-'+id);
+  if(!catatanInput.value.trim()){
+    alert('Isi catatan dulu!');
+    return;
+  }
+  updateDb(id, {status:'Selesai', catatan: catatanInput.value.trim()});
+}
+
 function renderTable(){
   const tbody = document.getElementById('tabel-laporan');
   let list = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai') : MASTER_DATA.filter(d=>d.status==='Selesai');
@@ -114,31 +123,24 @@ function renderTable(){
     const tgl = new Date(l.created_at);
     const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})";
     const isEditable = MODE_VIEW==='Aktif';
-    const btnSelesai = isEditable 
-        ? `<button onclick="l.catatan ? updateDb('${l.id}',{status:'Selesai'}) : alert('Isi catatan dulu!')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`
-        : `<span class="text-slate-400 text-[10px]">Selesai</span>`;
-    const fotoSrc = l.foto_url 
-        ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}`
-        : 'https://placehold.co/100x100?text=NA';
+    const fotoSrc = l.foto_url ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}` : 'https://placehold.co/100x100?text=NA';
 
     tbody.innerHTML += `
-<tr class="hover:bg-slate-50 border-b transition-all">
+<tr>
 <td class="p-2 text-center"><img src="${fotoSrc}" class="w-12 h-12 object-cover rounded-lg mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=NA'"></td>
-<td class="p-2">${jam}</td>
-<td class="p-2 font-bold">${l.nama_alat}</td>
-<td class="p-2">${l.lokasi}</td>
-<td class="p-2 text-slate-600">${l.isi_laporan}</td>
-<td class="p-2">${isEditable?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="border rounded-lg p-1">
+<td>${jam}</td>
+<td>${l.nama_alat}</td>
+<td>${l.lokasi}</td>
+<td>${l.isi_laporan}</td>
+<td>${isEditable?`<select onchange="updateDb('${l.id}',{urgensi:this.value})">
 <option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
 <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
 <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
 </select>`:l.urgensi}</td>
-<td class="p-2">${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})" class="border rounded-lg p-1">
-${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-</select>`:l.ditugaskan_ke}</td>
-<td class="p-2">
-${isEditable?`<input type="text" placeholder="Catatan..." value="${l.catatan||''}" onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">${btnSelesai}`:l.catatan||''}
-</td>
+<td>${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})">
+${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:l.ditugaskan_ke}</td>
+<td>${isEditable?`<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">
+<button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`:l.catatan||''}</td>
 </tr>`;
   });
 }
@@ -150,7 +152,7 @@ async function updateDb(id,dataUpdate){
     alert("Update gagal, cek console!");
     return;
   }
-  await muatData(); // pastikan data terbaru diambil
+  await muatData(); // refresh data setelah update
 }
 
 function setMode(m){
