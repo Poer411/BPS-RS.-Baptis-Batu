@@ -124,6 +124,7 @@ function klikSelesai(id){
 function renderTable(){
   const tbody = document.getElementById('tabel-laporan');
   let list = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai') : MASTER_DATA.filter(d=>d.status==='Selesai');
+  list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   document.getElementById('stat-count').innerText = list.length;
   tbody.innerHTML = '';
 
@@ -184,4 +185,5 @@ function aktifkanRealtime(){
 
 </body>
 </html>
+
 
