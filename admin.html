@@ -7,27 +7,23 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
-.fade-in { animation: fade .25s ease-in-out; }
-@keyframes fade { from {opacity:0} to {opacity:1} }
 </style>
 </head>
 
 <body class="bg-slate-100">
 
 <!-- Login Panel -->
-<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4 transition-all">
+<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4">
     <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
         <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">RS Baptis Batu</p>
         <div class="space-y-4">
-            <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
-            <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
-            <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase shadow-lg shadow-indigo-200 transition-all active:scale-95">Masuk Sekarang</button>
+            <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
+            <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
+            <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase">Masuk Sekarang</button>
         </div>
     </div>
 </div>
@@ -47,8 +43,8 @@ body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 
 <div class="flex justify-between items-center">
 <div class="flex gap-2 bg-white p-1.5 rounded-2xl border shadow-sm">
-<button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all">ANTRIAN AKTIF</button>
-<button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all">RIWAYAT SELESAI</button>
+<button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md">ANTRIAN AKTIF</button>
+<button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500">RIWAYAT SELESAI</button>
 </div>
 <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200">
 <p class="text-[9px] font-bold text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
@@ -66,8 +62,7 @@ body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 <th class="p-4 text-left">Masalah</th>
 <th class="p-4 text-left">Urgensi</th>
 <th class="p-4 text-left">Teknisi</th>
-<th class="p-4 text-left">Status / Catatan</th>
-<th class="p-4 text-left">Kirim</th>
+<th class="p-4 text-left">Catatan / Status</th>
 </tr>
 </thead>
 <tbody id="tabel-laporan"></tbody>
@@ -80,18 +75,7 @@ body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 <script>
 const URL_PROYEK = "https://hcqyfhndihjpuihjzusx.supabase.co";
 const KEY_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
-const TG_TOKEN = "MASUKAN_TOKEN_TELEGRAM";
-const TG_CHAT_ID = "MASUKAN_CHAT_ID";
 const DAFTAR_TEKNISI = ["DIDIT","SUSANTO","LUCIA","ROKIM","BAMBANG","PURNOMO","TWIN"];
-const TEKNISI_HP = {
-  "DIDIT":"081331755209",
-  "SUSANTO":"089668467140",
-  "LUCIA":"085708203992",
-  "ROKIM":"085806690875",
-  "BAMBANG":"08980506696",
-  "PURNOMO":"085100332530",
-  "TWIN":"085646405019"
-};
 
 let db;
 let MASTER_DATA = [];
@@ -99,7 +83,6 @@ let MODE_VIEW = 'Aktif';
 
 window.onload = function(){
   db = supabase.createClient(URL_PROYEK, KEY_ANON);
-  console.log("Supabase Ready");
 };
 
 function cekLogin(){
@@ -129,37 +112,29 @@ function renderTable(){
   list.forEach(l=>{
     const tgl = new Date(l.created_at);
     const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+" - "+tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-    let optT = '<option value="">-- Pilih --</option>';
-    DAFTAR_TEKNISI.forEach(t=>optT+=`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`);
-
-    tbody.innerHTML+=`
+    const isEditable = MODE_VIEW==='Aktif';
+    const btnSelesai = isEditable 
+        ? `<button onclick="l.catatan ? updateDb('${l.id}',{status:'Selesai'}) : alert('Isi catatan dulu!')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`
+        : `<span class="text-slate-400 text-[10px]">Selesai</span>`;
+    
+    tbody.innerHTML += `
 <tr class="hover:bg-slate-50 border-b transition-all">
 <td class="p-2">${jam}</td>
 <td class="p-2 font-bold">${l.nama_alat}</td>
 <td class="p-2">${l.lokasi}</td>
 <td class="p-2 text-slate-600">${l.isi_laporan}</td>
-<td class="p-2">
-<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="border rounded-lg p-1">
+<td class="p-2">${isEditable?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="border rounded-lg p-1">
 <option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
 <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
 <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
-</select>
-</td>
+</select>`:l.urgensi}</td>
+<td class="p-2">${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})" class="border rounded-lg p-1">
+${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
+</select>`:l.ditugaskan_ke}</td>
 <td class="p-2">
-<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})" class="border rounded-lg p-1">
-${optT}
-</select>
+${isEditable?`<input type="text" placeholder="Catatan..." value="${l.catatan||''}" onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">${btnSelesai}`:l.catatan||''}
 </td>
-<td class="p-2">
-<input type="text" placeholder="Catatan..." value="${l.catatan||''}" onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">
-<button onclick="l.catatan ? updateDb('${l.id}',{status:'Selesai'}) : alert('Isi catatan dulu!')" class="bg-slate-800 text-white text-[10px] px-2 py-1 rounded mt-1">Selesai</button>
-</td>
-<td class="p-2 flex gap-1">
-<button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white px-2 py-1 rounded">Telegram</button>
-<button onclick="kirimWA('${l.id}')" class="bg-green-500 text-white px-2 py-1 rounded">WhatsApp</button>
-</td>
-</tr>
-    `;
+</tr>`;
   });
 }
 
@@ -168,49 +143,15 @@ async function updateDb(id,dataUpdate){
   muatData();
 }
 
-async function kirimTelegram(id){
-  const l = MASTER_DATA.find(x=>x.id==id);
-  if(!l.ditugaskan_ke) return alert("Pilih teknisi dulu!");
-  const msg=`🎯 PENUGASAN IPSRS
-👷 Petugas: ${l.ditugaskan_ke}
-🛠️ Alat: ${l.nama_alat}
-📍 Lokasi: ${l.lokasi}
-📝 Masalah: ${l.isi_laporan}
-⚠️ Urgensi: ${l.urgensi.toUpperCase()}`;
-  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(msg)}`)
-    .then(res=>console.log("Telegram response:",res))
-    .catch(err=>console.error("Telegram error:",err));
-  alert("🚀 Pesan Telegram terkirim (cek console jika error)!");
-}
-
-function kirimWA(id){
-  const l = MASTER_DATA.find(x=>x.id==id);
-  if(!l.ditugaskan_ke) return alert("Pilih teknisi dulu!");
-  const nomor = TEKNISI_HP[l.ditugaskan_ke];
-  const msg=`PENUGASAN IPSRS
-Petugas: ${l.ditugaskan_ke}
-Alat: ${l.nama_alat}
-Lokasi: ${l.lokasi}
-Masalah: ${l.isi_laporan}
-Urgensi: ${l.urgensi}`;
-  window.open(`https://wa.me/${nomor}?text=${encodeURIComponent(msg)}`,"_blank");
-}
-
 function setMode(m){
   MODE_VIEW=m;
-  document.getElementById('btn-mode-aktif').className = m==='Aktif'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
-  document.getElementById('btn-mode-selesai').className = m==='Selesai'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
+  document.getElementById('btn-mode-aktif').className = m==='Aktif'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
+  document.getElementById('btn-mode-selesai').className = m==='Selesai'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
   renderTable();
 }
 
 function exportKePDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('l','mm','a4');
-  const dataFilter = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai'): MASTER_DATA.filter(d=>d.status==='Selesai');
-  const rows = dataFilter.map((l,i)=>[i+1,new Date(l.created_at).toLocaleString('id-ID'),l.nama_alat,l.lokasi,l.isi_laporan,l.urgensi,l.ditugaskan_ke,l.catatan||'']);
-  doc.text(`LAPORAN IPSRS - ${MODE_VIEW}`,14,15);
-  doc.autoTable({startY:20,head:[['NO','WAKTU','ALAT','LOKASI','MASALAH','URGENSI','TEKNISI','CATATAN']],body:rows,styles:{fontSize:7}});
-  doc.save(`Laporan_${MODE_VIEW}.pdf`);
+  alert("Fitur export PDF sementara di-skip dulu");
 }
 
 function aktifkanRealtime(){
