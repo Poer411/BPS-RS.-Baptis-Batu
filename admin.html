@@ -3,192 +3,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin IPSRS - RS Baptis Batu</title>
+<title>Dashboard IPSRS - RS Baptis Batu</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { margin:0; font-family:Inter, sans-serif; }
-.fade-in { animation: fade .3s ease-in-out; }
-@keyframes fade { from{opacity:0} to{opacity:1} }
+body { margin:0; font-family: Inter, sans-serif; }
+.fade-in { animation: fade .25s ease-in-out; }
+@keyframes fade { from {opacity:0} to {opacity:1} }
 </style>
 </head>
+
 <body class="bg-slate-100">
 
-<!-- LOGIN -->
-<div id="loginPage" class="min-h-screen flex items-center justify-center">
-  <div class="bg-white w-full max-w-md p-10 rounded-3xl shadow-xl">
-    <h1 class="text-2xl font-black text-center mb-6">
-      IPSRS <span class="text-indigo-600">ADMIN</span>
-    </h1>
-    <input id="email" type="email" placeholder="Email"
-      class="w-full p-4 border rounded-xl mb-4">
-    <input id="password" type="password" placeholder="Password"
-      class="w-full p-4 border rounded-xl mb-6">
-    <button onclick="login()"
-      class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold">
-      Login
-    </button>
-  </div>
+<div class="min-h-screen flex flex-col">
+
+<!-- HEADER -->
+<header class="bg-white shadow px-6 py-4 flex justify-between items-center">
+<h1 class="font-black text-lg">
+🛠️ IPSRS - RS Baptis Batu
+</h1>
+<span class="text-sm text-slate-400">Realtime Monitoring</span>
+</header>
+
+<!-- CONTENT -->
+<main class="p-6 flex-1">
+
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold">
+Total Laporan:
+<span id="totalCount" class="text-indigo-600">0</span>
+</h2>
+
+<select id="filterStatus"
+class="border rounded-lg px-3 py-2">
+<option value="Aktif">Aktif</option>
+<option value="Selesai">Selesai</option>
+</select>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden">
+<div class="bg-white rounded-2xl shadow overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+<tr>
+<th class="p-4 text-left">Waktu</th>
+<th class="p-4 text-left">Alat</th>
+<th class="p-4 text-left">Lokasi</th>
+<th class="p-4 text-left">Masalah</th>
+<th class="p-4 text-left">Urgensi</th>
+<th class="p-4 text-left">Status</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
 
-  <!-- HEADER -->
-  <header class="bg-white shadow px-6 py-4 flex justify-between">
-    <h2 class="font-black text-lg">
-      🛠️ IPSRS - RS Baptis Batu
-    </h2>
-    <div class="flex gap-3">
-      <button onclick="logout()" class="text-sm text-slate-500">
-        Logout
-      </button>
-    </div>
-  </header>
-
-  <!-- CONTENT -->
-  <main class="p-6">
-
-    <div class="flex justify-between mb-6">
-      <h3 class="text-xl font-bold">
-        Total Laporan:
-        <span id="totalCount" class="text-indigo-600">0</span>
-      </h3>
-      <select id="filterStatus" onchange="renderData()"
-        class="border rounded-lg px-3 py-2">
-        <option value="Aktif">Aktif</option>
-        <option value="Selesai">Selesai</option>
-      </select>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-          <tr>
-            <th class="p-4 text-left">Waktu</th>
-            <th class="p-4 text-left">Alat</th>
-            <th class="p-4 text-left">Lokasi</th>
-            <th class="p-4 text-left">Urgensi</th>
-            <th class="p-4 text-left">Status</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-  </main>
+</main>
 </div>
 
 <script>
 
-const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
-const SUPABASE_KEY = "YOUR_PUBLIC_ANON_KEY";
+/* ===============================
+   KONFIGURASI SUPABASE
+================================ */
+
+const SUPABASE_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
 
 const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
+SUPABASE_URL,
+SUPABASE_KEY
 );
 
 let DATA = [];
 
-checkSession();
+/* ===============================
+   INIT
+================================ */
 
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+document.addEventListener("DOMContentLoaded", () => {
+fetchData();
+setupRealtime();
+document.getElementById("filterStatus")
+.addEventListener("change", renderData);
+});
 
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email, password
-  });
-
-  if (error) return alert(error.message);
-
-  loadDashboard();
-}
-
-async function logout() {
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
-
-async function checkSession() {
-  const { data } = await supabaseClient.auth.getSession();
-  if (data.session) loadDashboard();
-}
-
-function loadDashboard() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
-  fetchData();
-  setupRealtime();
-}
+/* ===============================
+   FETCH DATA
+================================ */
 
 async function fetchData() {
-  const { data, error } = await supabaseClient
-    .from("laporan_perbaikan")
-    .select("*")
-    .order("created_at", { ascending:false });
 
-  if (error) return console.error(error);
+const { data, error } = await supabaseClient
+.from("laporan_perbaikan")
+.select("*")
+.order("created_at", { ascending:false });
 
-  DATA = data;
-  renderData();
+if (error) {
+console.error("Supabase Error:", error);
+alert("Gagal ambil data: " + error.message);
+return;
 }
+
+DATA = data || [];
+renderData();
+}
+
+/* ===============================
+   RENDER TABLE
+================================ */
 
 function renderData() {
 
-  const statusFilter = document.getElementById("filterStatus").value;
-  const tbody = document.getElementById("tableBody");
+const filter = document.getElementById("filterStatus").value;
+const tbody = document.getElementById("tableBody");
 
-  let filtered = statusFilter === "Aktif"
-    ? DATA.filter(d => d.status !== "Selesai")
-    : DATA.filter(d => d.status === "Selesai");
+let filtered = filter === "Aktif"
+? DATA.filter(d => d.status !== "Selesai")
+: DATA.filter(d => d.status === "Selesai");
 
-  document.getElementById("totalCount").innerText = filtered.length;
+document.getElementById("totalCount").innerText =
+filtered.length;
 
-  tbody.innerHTML = "";
+tbody.innerHTML = "";
 
-  const fragment = document.createDocumentFragment();
+const fragment = document.createDocumentFragment();
 
-  filtered.forEach(item => {
+filtered.forEach(item => {
 
-    const tr = document.createElement("tr");
-    tr.className = "border-t hover:bg-slate-50 fade-in";
+const tr = document.createElement("tr");
+tr.className = "border-t hover:bg-slate-50 fade-in";
 
-    tr.innerHTML = `
-      <td class="p-4">${new Date(item.created_at)
-        .toLocaleString("id-ID")}</td>
-      <td class="p-4 font-bold">${item.nama_alat}</td>
-      <td class="p-4">${item.lokasi}</td>
-      <td class="p-4">
-        <span class="px-2 py-1 rounded-full text-xs
-          ${item.urgensi === "Darurat" ? "bg-red-100 text-red-600" :
-            item.urgensi === "Segera" ? "bg-yellow-100 text-yellow-600" :
-            "bg-green-100 text-green-600"}">
-          ${item.urgensi}
-        </span>
-      </td>
-      <td class="p-4">${item.status}</td>
-    `;
+tr.innerHTML = `
+<td class="p-4">
+${item.created_at
+? new Date(item.created_at).toLocaleString("id-ID")
+: "-"}
+</td>
 
-    fragment.appendChild(tr);
-  });
+<td class="p-4 font-semibold">
+${item.nama_alat || "-"}
+</td>
 
-  tbody.appendChild(fragment);
+<td class="p-4">
+${item.lokasi || "-"}
+</td>
+
+<td class="p-4 text-slate-600">
+${item.isi_laporan || "-"}
+</td>
+
+<td class="p-4">
+<span class="px-2 py-1 rounded-full text-xs
+${item.urgensi === "Darurat" ? "bg-red-100 text-red-600" :
+item.urgensi === "Segera" ? "bg-yellow-100 text-yellow-600" :
+"bg-green-100 text-green-600"}">
+${item.urgensi || "Biasa"}
+</span>
+</td>
+
+<td class="p-4">
+${item.status || "Baru"}
+</td>
+`;
+
+fragment.appendChild(tr);
+});
+
+tbody.appendChild(fragment);
 }
 
+/* ===============================
+   REALTIME LISTENER
+================================ */
+
 function setupRealtime() {
-  supabaseClient.channel("realtime")
-    .on("postgres_changes", {
-      event:"*",
-      schema:"public",
-      table:"laporan_perbaikan"
-    }, fetchData)
-    .subscribe();
+
+supabaseClient.channel("realtime")
+.on("postgres_changes", {
+event:"*",
+schema:"public",
+table:"laporan_perbaikan"
+}, fetchData)
+.subscribe();
+
 }
 
 </script>
+
 </body>
 </html>
