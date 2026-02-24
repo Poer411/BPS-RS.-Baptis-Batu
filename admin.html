@@ -149,3 +149,37 @@
         async function updateDb(id, data) {
             await db.from('laporan_perbaikan').update(data).eq('id', id);
             muatData();
+        }
+
+        async function kirimTelegram(id) {
+            const l = MASTER_DATA.find(x => x.id == id);
+            const urgensiSkrg = document.getElementById(`urgensi-${id}`).value;
+            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
+            const msg = `🎯 *PENUGASAN IPSRS*%0A👷 *Petugas:* ${l.ditugaskan_ke}%0A🛠️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A⚠️ *Urgensi:* ${urgensiSkrg.toUpperCase()}`;
+            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
+            alert("🚀 Terkirim!");
+        }
+
+        function setMode(m) {
+            MODE_VIEW = m;
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md' : 'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md' : 'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
+            renderTable();
+        }
+
+        function exportKePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const dataFilter = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
+            const rows = dataFilter.map((l, i) => [i + 1, new Date(l.created_at).toLocaleString('id-ID'), l.nama_alat, l.lokasi, l.isi_laporan, l.urgensi, l.ditugaskan_ke]);
+            doc.text(`LAPORAN IPSRS - ${MODE_VIEW}`, 14, 15);
+            doc.autoTable({ startY: 20, head: [['NO', 'WAKTU', 'ALAT', 'LOKASI', 'MASALAH', 'URGENSI', 'TEKNISI']], body: rows, styles: { fontSize: 7 } });
+            doc.save(`Laporan_${MODE_VIEW}.pdf`);
+        }
+
+        function aktifkanRealtime() {
+            db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe();
+        }
+    </script>
+</body>
+</html>
