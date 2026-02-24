@@ -1,213 +1,186 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-    <script>
-        // SCRIPT DIPINDAH KE ATAS AGAR DEFINISI FUNGSI TERBACA DULUAN
-        const URL_PROYEK = 'https://hcqyfhndihjpuihjzusx.supabase.co';
-        const KEY_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM';
-        const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
-        const TG_CHAT_ID = "7728459706";
-        const DAFTAR_TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
-        
-        let db;
-        let MASTER_DATA = [];
-        let MODE_VIEW = 'Aktif';
-
-        // Inisialisasi Database
-        window.onload = function() {
-            try {
-                db = supabase.createClient(URL_PROYEK, KEY_ANON);
-                console.log("Supabase Ready");
-            } catch (e) {
-                console.error("Koneksi Gagal", e);
-            }
-        };
-
-        // FUNGSI LOGIN UTAMA
-        function cekLogin() {
-            const u = document.getElementById('user-input').value.trim();
-            const p = document.getElementById('pass-input').value.trim();
-            
-            if (u === "admin" && p === "admin123") {
-                document.getElementById('login-panel').style.display = 'none';
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                muatData();
-                aktifkanRealtime();
-            } else {
-                alert("Username atau Password Salah!");
-            }
-        }
-
-        async function muatData() {
-            const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (!error) { 
-                MASTER_DATA = data || []; 
-                renderTable(); 
-            }
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('tabel-laporan');
-            let list = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            document.getElementById('stat-count').innerText = list.length;
-            tbody.innerHTML = '';
-
-            list.forEach(l => {
-                const tgl = new Date(l.created_at);
-                const jamLapor = tgl.toLocaleDateString('id-ID', {day:'2-digit', month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-                
-                let optT = `<option value="">-- Pilih --</option>`;
-                DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
-
-                tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 border-b border-slate-100 transition-all">
-                    <td class="text-center p-2">
-                        <img src="${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-12 h-12 object-cover rounded-lg mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=NA'">
-                    </td>
-                    <td class="font-bold text-slate-500 uppercase p-2">${jamLapor}</td>
-                    <td class="p-2">
-                        <div class="font-black text-slate-800 uppercase leading-none mb-1">${l.nama_alat}</div>
-                        <div class="text-[9px] text-indigo-500 font-bold uppercase tracking-tighter">📍 ${l.lokasi}</div>
-                    </td>
-                    <td class="p-2">
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 italic text-slate-700 text-[13px] leading-snug">
-                            "${l.isi_laporan}"
-                            <div class="not-italic font-black text-[9px] text-slate-400 mt-2 uppercase">Pelapor: ${l.nama_pelapor}</div>
-                        </div>
-                    </td>
-                    <td class="p-2 text-center">
-                        <select id="urgensi-${l.id}" onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
-                            <option value="Biasa" ${l.urgensi === 'Biasa' ? 'selected' : ''}>🟢 BIASA</option>
-                            <option value="Segera" ${l.urgensi === 'Segera' ? 'selected' : ''}>🟡 SEGERA</option>
-                            <option value="Darurat" ${l.urgensi === 'Darurat' ? 'selected' : ''}>🔴 DARURAT</option>
-                        </select>
-                    </td>
-                    <td class="p-2">
-                        <select onchange="updateDb('${l.id}', {ditugaskan_ke: this.value, status: 'Proses'})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
-                            ${optT}
-                        </select>
-                    </td>
-                    <td class="text-right p-2">
-                        <div class="flex flex-col gap-1">
-                            <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black py-2 rounded-lg uppercase shadow-sm">Kirim</button>
-                            ${MODE_VIEW === 'Aktif' ? `<button onclick="updateDb('${l.id}', {status: 'Selesai'})" class="bg-slate-800 text-white text-[8px] font-black py-2 rounded-lg uppercase shadow-sm">Selesai</button>` : ''}
-                        </div>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        async function updateDb(id, dataUpdate) {
-            await db.from('laporan_perbaikan').update(dataUpdate).eq('id', id);
-            muatData();
-        }
-
-        async function kirimTelegram(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            const urgensiSkrg = document.getElementById(`urgensi-${id}`).value;
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const msg = `🎯 *PENUGASAN IPSRS*%0A👷 *Petugas:* ${l.ditugaskan_ke}%0A🛠️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A⚠️ *Urgensi:* ${urgensiSkrg.toUpperCase()}`;
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("🚀 Terkirim!");
-        }
-
-        function setMode(m) {
-            MODE_VIEW = m;
-            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all' : 'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
-            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all' : 'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
-            renderTable();
-        }
-
-        function exportKePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const dataFilter = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            const rows = dataFilter.map((l, i) => [i + 1, new Date(l.created_at).toLocaleString('id-ID'), l.nama_alat, l.lokasi, l.isi_laporan, l.urgensi, l.ditugaskan_ke]);
-            doc.text(`LAPORAN IPSRS - ${MODE_VIEW}`, 14, 15);
-            doc.autoTable({ startY: 20, head: [['NO', 'WAKTU', 'ALAT', 'LOKASI', 'MASALAH', 'URGENSI', 'TEKNISI']], body: rows, styles: { fontSize: 7 } });
-            doc.save(`Laporan_${MODE_VIEW}.pdf`);
-        }
-
-        function aktifkanRealtime() {
-            db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe();
-        }
-    </script>
-
-    <style>
-        body, html { height: 100%; margin: 0; font-family: sans-serif; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100vh; background-color: #f8fafc; }
-        .header-fixed { flex-shrink: 0; z-index: 50; background: white; border-bottom: 2px solid #e2e8f0; }
-        .content-scrollable { flex-grow: 1; overflow-y: auto; padding: 12px; }
-        th { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 12px 8px !important; }
-        td { font-size: 11px; vertical-align: top; padding: 12px 8px !important; }
-        .hidden { display: none !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard IPSRS - RS Baptis Batu</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
+</style>
 </head>
-<body>
+<body class="bg-slate-100">
 
-    <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4 transition-all">
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">RS Baptis Batu</p>
-            <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600 transition-all">
-                <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase shadow-lg shadow-indigo-200 transition-all active:scale-95">Masuk Sekarang</button>
-            </div>
+<!-- Login Panel -->
+<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4">
+    <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
+        <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">RS Baptis Batu</p>
+        <div class="space-y-4">
+            <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
+            <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
+            <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase">Masuk Sekarang</button>
         </div>
     </div>
+</div>
 
-    <div id="admin-dashboard" class="app-container hidden">
-        <div class="header-fixed">
-            <nav class="px-6 py-3 flex justify-between items-center">
-                <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ IPSRS <span class="text-indigo-600">BAPTIS BATU</span></h1>
-                <div class="flex gap-2">
-                    <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Export PDF</button>
-                    <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-4 py-2 rounded-xl uppercase hover:bg-slate-50">Logout</button>
-                </div>
-            </nav>
-            <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50">
-                <div class="flex bg-white p-1.5 rounded-2xl border shadow-sm">
-                    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all">ANTRIAN AKTIF</button>
-                    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500 transition-all">RIWAYAT SELESAI</button>
-                </div>
-                <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200">
-                    <p class="text-[9px] font-bold text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
-                    <span id="stat-count" class="text-2xl font-black text-indigo-600 leading-none">0</span>
-                </div>
-            </div>
-        </div>
+<!-- Admin Dashboard -->
+<div id="admin-dashboard" class="hidden flex flex-col min-h-screen">
 
-        <div class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
-                <table class="w-full text-left table-fixed border-collapse">
-                    <thead class="bg-slate-50 border-b sticky top-0 z-10">
-                        <tr>
-                            <th class="w-16 text-center">Foto</th>
-                            <th class="w-32">Jam Lapor</th>
-                            <th class="w-44">Alat & Lokasi</th>
-                            <th>Kronologi & Pelapor</th>
-                            <th class="w-32 text-center">Urgensi (Admin)</th>
-                            <th class="w-32">Teknisi</th>
-                            <th class="w-24 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-laporan" class="divide-y divide-slate-100">
-                        <tr><td colspan="7" class="text-center py-20">Menghubungkan ke database...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<header class="bg-white shadow px-6 py-4 flex justify-between items-center">
+<h1 class="font-black text-lg">🛠️ IPSRS - RS Baptis Batu</h1>
+<div class="flex gap-2">
+<button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Export PDF</button>
+<button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-4 py-2 rounded-xl uppercase hover:bg-slate-50">Logout</button>
+</div>
+</header>
+
+<div class="p-6 flex flex-col gap-4 flex-1 overflow-auto">
+
+<div class="flex justify-between items-center">
+<div class="flex gap-2 bg-white p-1.5 rounded-2xl border shadow-sm">
+<button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md">ANTRIAN AKTIF</button>
+<button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500">RIWAYAT SELESAI</button>
+</div>
+<div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200">
+<p class="text-[9px] font-bold text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
+<span id="stat-count" class="text-2xl font-black text-indigo-600 leading-none">0</span>
+</div>
+</div>
+
+<div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
+<table class="w-full text-sm">
+<thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+<tr>
+<th class="p-4 text-left">Foto</th>
+<th class="p-4 text-left">Waktu</th>
+<th class="p-4 text-left">Alat</th>
+<th class="p-4 text-left">Lokasi</th>
+<th class="p-4 text-left">Masalah</th>
+<th class="p-4 text-left">Urgensi</th>
+<th class="p-4 text-left">Teknisi</th>
+<th class="p-4 text-left">Catatan / Status</th>
+</tr>
+</thead>
+<tbody id="tabel-laporan"></tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+<script>
+// Supabase Config
+const URL_PROYEK = "https://hcqyfhndihjpuihjzusx.supabase.co";
+const KEY_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
+const DAFTAR_TEKNISI = ["DIDIT","SUSANTO","LUCIA","ROKIM","BAMBANG","PURNOMO","TWIN"];
+
+let db;
+let MASTER_DATA = [];
+let MODE_VIEW = 'Aktif';
+
+// Inisialisasi Supabase
+window.onload = function(){
+  db = supabase.createClient(URL_PROYEK, KEY_ANON);
+};
+
+// Login
+function cekLogin(){
+  const u = document.getElementById('user-input').value.trim();
+  const p = document.getElementById('pass-input').value.trim();
+  if(u==="admin" && p==="admin123"){
+    document.getElementById('login-panel').style.display='none';
+    document.getElementById('admin-dashboard').classList.remove('hidden');
+    muatData();
+    aktifkanRealtime();
+  } else {
+    alert("Username / Password salah!");
+  }
+}
+
+// Load data
+async function muatData(){
+  const { data,error } = await db.from('laporan_perbaikan').select('*').order('created_at',{ascending:false});
+  if(!error){
+    MASTER_DATA = data || [];
+    renderTable();
+  } else {
+    console.error("Load data error:", error);
+  }
+}
+
+// Tombol Selesai
+function klikSelesai(id){
+  const catatanInput = document.getElementById('catatan-'+id);
+  if(!catatanInput.value.trim()){
+    alert('Isi catatan dulu!');
+    return;
+  }
+  updateDb(id, {status:'Selesai', catatan: catatanInput.value.trim()});
+}
+
+// Render tabel
+function renderTable(){
+  const tbody = document.getElementById('tabel-laporan');
+  let list = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai') : MASTER_DATA.filter(d=>d.status==='Selesai');
+  document.getElementById('stat-count').innerText = list.length;
+  tbody.innerHTML = '';
+
+  list.forEach(l=>{
+    const tgl = new Date(l.created_at);
+    const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const isEditable = MODE_VIEW==='Aktif';
+    const fotoSrc = l.foto_url ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}` : 'https://placehold.co/100x100?text=NA';
+
+    tbody.innerHTML += `
+<tr>
+<td class="p-2 text-center"><img src="${fotoSrc}" class="w-12 h-12 object-cover rounded-lg mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=NA'"></td>
+<td>${jam}</td>
+<td>${l.nama_alat}</td>
+<td>${l.lokasi}</td>
+<td>${l.isi_laporan}</td>
+<td>${isEditable?`<select onchange="updateDb('${l.id}',{urgensi:this.value})">
+<option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
+<option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
+<option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
+</select>`:l.urgensi}</td>
+<td>${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})">
+${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
+</select>`:l.ditugaskan_ke}</td>
+<td>${isEditable?`<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">
+<button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`:l.catatan||''}</td>
+</tr>`;
+  });
+}
+
+// Update database
+async function updateDb(id,dataUpdate){
+  const { error } = await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
+  if(error){
+    console.error("Update gagal:", error);
+    alert("Update gagal, cek console!");
+    return;
+  }
+  await muatData();
+}
+
+// Mode view
+function setMode(m){
+  MODE_VIEW=m;
+  document.getElementById('btn-mode-aktif').className = m==='Aktif'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
+  document.getElementById('btn-mode-selesai').className = m==='Selesai'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
+  renderTable();
+}
+
+function exportKePDF(){
+  alert("Fitur export PDF sementara di-skip dulu");
+}
+
+function aktifkanRealtime(){
+  db.channel('any').on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=>muatData()).subscribe();
+}
+</script>
 
 </body>
 </html>
