@@ -56,6 +56,7 @@ body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 <table class="w-full text-sm">
 <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
 <tr>
+<th class="p-4 text-left">Foto</th>
 <th class="p-4 text-left">Waktu</th>
 <th class="p-4 text-left">Alat</th>
 <th class="p-4 text-left">Lokasi</th>
@@ -111,14 +112,18 @@ function renderTable(){
   tbody.innerHTML = '';
   list.forEach(l=>{
     const tgl = new Date(l.created_at);
-    const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+" - "+tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})";
     const isEditable = MODE_VIEW==='Aktif';
     const btnSelesai = isEditable 
         ? `<button onclick="l.catatan ? updateDb('${l.id}',{status:'Selesai'}) : alert('Isi catatan dulu!')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`
         : `<span class="text-slate-400 text-[10px]">Selesai</span>`;
-    
+    const fotoSrc = l.foto_url 
+        ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}`
+        : 'https://placehold.co/100x100?text=NA';
+
     tbody.innerHTML += `
 <tr class="hover:bg-slate-50 border-b transition-all">
+<td class="p-2 text-center"><img src="${fotoSrc}" class="w-12 h-12 object-cover rounded-lg mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=NA'"></td>
 <td class="p-2">${jam}</td>
 <td class="p-2 font-bold">${l.nama_alat}</td>
 <td class="p-2">${l.lokasi}</td>
@@ -139,8 +144,13 @@ ${isEditable?`<input type="text" placeholder="Catatan..." value="${l.catatan||''
 }
 
 async function updateDb(id,dataUpdate){
-  await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
-  muatData();
+  const { error } = await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
+  if(error){
+    console.error("Update gagal:", error);
+    alert("Update gagal, cek console!");
+    return;
+  }
+  await muatData(); // pastikan data terbaru diambil
 }
 
 function setMode(m){
