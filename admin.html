@@ -102,15 +102,14 @@ function cekLogin(){
 
 // Load data
 async function muatData(){
-  const { data,error } = await db.from('laporan_perbaikan').select('*').order('created_at',{ascending:false});
+  const { data, error } = await db.from('laporan_perbaikan').select('*');
   if(!error){
-    MASTER_DATA = data || [];
+    // URUTAN TERBARU DI ATAS
+    MASTER_DATA = (data || []).sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
     renderTable();
-  } else {
-    console.error("Load data error:", error);
   }
 }
-
+ 
 // Tombol Selesai
 function klikSelesai(id){
   const catatanInput = document.getElementById('catatan-'+id);
@@ -185,3 +184,4 @@ function aktifkanRealtime(){
 
 </body>
 </html>
+
