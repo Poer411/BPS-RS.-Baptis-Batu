@@ -3,19 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard IPSRS - RS Baptis Batu</title>
+<title>Dashboard IPSRS</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body class="bg-slate-100">
 
 <!-- LOGIN -->
 <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
-  <div class="bg-white p-8 rounded-3xl shadow-xl w-80 text-center">
+  <div class="bg-white p-8 rounded-2xl shadow w-80 text-center">
     <h2 class="text-xl font-bold mb-4">ADMIN IPSRS</h2>
     <input id="user-input" class="w-full border p-2 mb-3 rounded" placeholder="Username">
     <input id="pass-input" type="password" class="w-full border p-2 mb-4 rounded" placeholder="Password">
-    <button onclick="cekLogin()" class="bg-indigo-600 text-white w-full p-2 rounded">Login</button>
+    <button onclick="cekLogin()" class="bg-indigo-600 text-white w-full p-2 rounded">
+      Login
+    </button>
   </div>
 </div>
 
@@ -24,13 +28,20 @@
 
 <div class="flex justify-between mb-4">
   <div>
-    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="bg-indigo-600 text-white px-4 py-2 rounded">Antrian Aktif</button>
-    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="bg-gray-300 px-4 py-2 rounded">Riwayat</button>
+    <button onclick="setMode('Aktif')" class="bg-indigo-600 text-white px-4 py-2 rounded">
+      Antrian Aktif
+    </button>
+    <button onclick="setMode('Selesai')" class="bg-gray-300 px-4 py-2 rounded">
+      Riwayat
+    </button>
   </div>
-  <div class="font-bold">Total: <span id="stat-count">0</span></div>
+
+  <div class="font-bold">
+    Total: <span id="stat-count">0</span>
+  </div>
 </div>
 
-<div class="bg-white rounded-xl shadow overflow-auto">
+<div class="bg-white rounded shadow overflow-auto">
 <table class="w-full text-sm">
 <thead class="bg-gray-100">
 <tr>
@@ -50,93 +61,119 @@
 </div>
 
 <script>
-const URL_PROYEK = "https://hcqyfhndihjpuihjzusx.supabase.co";
-const KEY_ANON = "ISI_DENGAN_ANON_KEY_ANDA";
+
+const URL_PROYEK = "ISI_URL_SUPABASE_ANDA";
+const KEY_ANON = "ISI_ANON_KEY_ANDA";
+
 const DAFTAR_TEKNISI = ["DIDIT","SUSANTO","LUCIA","ROKIM","BAMBANG","PURNOMO","TWIN"];
 
 let db;
 let MASTER_DATA = [];
-let MODE_VIEW = 'Aktif';
+let MODE_VIEW = "Aktif";
 
 window.onload = function(){
   db = supabase.createClient(URL_PROYEK, KEY_ANON);
 };
 
 function cekLogin(){
-  if(user-input.value==="admin" && pass-input.value==="admin123"){
-    login-panel.style.display="none";
-    admin-dashboard.classList.remove("hidden");
+  const u = document.getElementById("user-input").value;
+  const p = document.getElementById("pass-input").value;
+
+  if(u==="admin" && p==="admin123"){
+    document.getElementById("login-panel").style.display="none";
+    document.getElementById("admin-dashboard").classList.remove("hidden");
     muatData();
     aktifkanRealtime();
-  } else alert("Login salah");
+  } else {
+    alert("Login salah");
+  }
 }
 
 async function muatData(){
-  const { data } = await db.from('laporan_perbaikan').select('*');
-  MASTER_DATA = (data||[]).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
+  const { data } = await db.from("laporan_perbaikan").select("*");
+
+  MASTER_DATA = (data || []).sort(
+    (a,b)=> new Date(b.created_at) - new Date(a.created_at)
+  );
+
   renderTable();
 }
 
 function renderTable(){
-  const tbody = document.getElementById('tabel-laporan');
-  let list = MODE_VIEW==='Aktif'
-    ? MASTER_DATA.filter(d=>d.status!=='Selesai')
-    : MASTER_DATA.filter(d=>d.status==='Selesai');
 
-  list.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
+  const tbody = document.getElementById("tabel-laporan");
 
-  stat-count.innerText = list.length;
-  tbody.innerHTML = '';
+  let list = MODE_VIEW==="Aktif"
+    ? MASTER_DATA.filter(d=>d.status!=="Selesai")
+    : MASTER_DATA.filter(d=>d.status==="Selesai");
+
+  document.getElementById("stat-count").innerText = list.length;
+
+  tbody.innerHTML = "";
 
   list.forEach(l=>{
+
     const tgl = new Date(l.created_at);
-    const jam = tgl.toLocaleDateString('id-ID')+" "+tgl.toLocaleTimeString('id-ID');
-    const isEditable = MODE_VIEW==='Aktif';
+    const jam = tgl.toLocaleString("id-ID");
+    const editable = MODE_VIEW==="Aktif";
 
     tbody.innerHTML += `
 <tr class="border-t">
+
 <td class="p-2">${jam}</td>
 
 <td>
   <div class="font-bold">${l.nama_alat}</div>
-  <div class="text-xs text-indigo-600">👤 ${l.nama_pelapor || '-'}</div>
+  <div class="text-xs text-indigo-600">
+    👤 ${l.nama_pelapor || "-"}
+  </div>
 </td>
 
 <td>${l.lokasi}</td>
 <td>${l.isi_laporan}</td>
 
 <td>
-${isEditable ? `
+${editable ? `
 <select onchange="updateDb('${l.id}',{urgensi:this.value})">
-<option value="Biasa" ${(!l.urgensi||l.urgensi==='Biasa')?'selected':''}>Biasa</option>
-<option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
-<option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
-</select>` : (l.urgensi||'Biasa')}
+<option value="Biasa" ${(!l.urgensi||l.urgensi==="Biasa")?"selected":""}>Biasa</option>
+<option value="Segera" ${l.urgensi==="Segera"?"selected":""}>Segera</option>
+<option value="Darurat" ${l.urgensi==="Darurat"?"selected":""}>Darurat</option>
+</select>
+` : (l.urgensi||"Biasa")}
 </td>
 
 <td>
-${isEditable ? `
+${editable ? `
 <select onchange="handleTeknisi('${l.id}',this.value)">
 <option value="">-- Pilih Teknisi --</option>
-${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-</select>` : (l.ditugaskan_ke||'-')}
+${DAFTAR_TEKNISI.map(t=>
+`<option value="${t}" ${l.ditugaskan_ke===t?"selected":""}>${t}</option>`
+).join("")}
+</select>
+` : (l.ditugaskan_ke||"-")}
 </td>
 
 <td>
-${isEditable ? `
-<input id="catatan-${l.id}" class="border p-1 rounded w-full" value="${l.catatan||''}">
-<button onclick="klikSelesai('${l.id}')" class="bg-black text-white px-2 py-1 mt-1 rounded">SELESAI</button>
-` : (l.catatan||'-')}
+${editable ? `
+<input id="catatan-${l.id}" class="border p-1 rounded w-full"
+value="${l.catatan||""}">
+<button onclick="klikSelesai('${l.id}')"
+class="bg-black text-white px-2 py-1 mt-1 rounded">
+SELESAI
+</button>
+` : (l.catatan||"-")}
 </td>
 
-</tr>`;
+</tr>
+`;
   });
 }
 
 async function updateDb(id,dataUpdate){
-  const { error } = await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
-  if(error){ alert("Update gagal"); console.error(error); }
-  else await muatData();
+  await db.from("laporan_perbaikan")
+          .update(dataUpdate)
+          .eq("id",id);
+  await muatData();
 }
 
 async function handleTeknisi(id,value){
@@ -148,34 +185,41 @@ async function handleTeknisi(id,value){
 }
 
 async function klikSelesai(id){
+
   const row = MASTER_DATA.find(x=>x.id==id);
+
   if(!row.ditugaskan_ke){
     alert("Pilih teknisi dulu!");
     return;
   }
 
-  const catatan = document.getElementById('catatan-'+id).value.trim();
+  const catatan = document.getElementById("catatan-"+id).value.trim();
+
   if(!catatan){
     alert("Isi catatan dulu!");
     return;
   }
 
   await updateDb(id,{
-    status:'Selesai',
+    status:"Selesai",
     catatan:catatan
   });
 }
 
 function setMode(m){
-  MODE_VIEW=m;
+  MODE_VIEW = m;
   renderTable();
 }
 
 function aktifkanRealtime(){
-  db.channel('any')
-    .on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=>muatData())
+  db.channel("any")
+    .on("postgres_changes",
+      {event:"*",schema:"public",table:"laporan_perbaikan"},
+      ()=> muatData()
+    )
     .subscribe();
 }
+
 </script>
 
 </body>
