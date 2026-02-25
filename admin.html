@@ -143,6 +143,7 @@ function renderTable(){
     const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
     const isEditable = MODE_VIEW==='Aktif';
     const fotoSrc = l.foto_url ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}` : 'https://placehold.co/100x100?text=NA';
+    const urgensiDisplay = l.urgensi || 'Biasa'; // fallback default
 
     tbody.innerHTML += `
 <tr>
@@ -151,16 +152,18 @@ function renderTable(){
 <td>${l.nama_alat}</td>
 <td>${l.lokasi}</td>
 <td>${l.isi_laporan}</td>
-<td>${isEditable?`<select onchange="updateDb('${l.id}',{urgensi:this.value})">
-<option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
-<option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
-<option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
-</select>`:l.urgensi}</td>
-<td>${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})">
+<td>
+${isEditable ? `<select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
+  <option value="Biasa" ${(!l.urgensi || l.urgensi==='Biasa')?'selected':''}>Biasa</option>
+  <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
+  <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
+</select>` : urgensiDisplay}
+</td>
+<td>${isEditable ? `<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
 ${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-</select>`:l.ditugaskan_ke}</td>
-<td>${isEditable?`<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." class="border rounded-lg p-1 w-full">
-<button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`:l.catatan||''}</td>
+</select>` : (l.ditugaskan_ke || '')}</td>
+<td>${isEditable ? `<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." class="border rounded-lg p-1 w-full">
+<button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>` : (l.catatan||'')}</td>
 </tr>`;
   });
 }
