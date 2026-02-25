@@ -6,62 +6,41 @@
 <title>Dashboard IPSRS - RS Baptis Batu</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
-.hidden { display:none !important; }
-</style>
 </head>
 <body class="bg-slate-100">
 
-<!-- LOGIN PANEL -->
-<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900 px-4">
-  <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-    <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
-    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">RS Baptis Batu</p>
-    <div class="space-y-4">
-      <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
-      <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 outline-none font-bold text-center focus:border-indigo-600">
-      <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl uppercase">Masuk Sekarang</button>
-    </div>
+<!-- LOGIN -->
+<div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
+  <div class="bg-white p-8 rounded-3xl shadow-xl w-80 text-center">
+    <h2 class="text-xl font-bold mb-4">ADMIN IPSRS</h2>
+    <input id="user-input" class="w-full border p-2 mb-3 rounded" placeholder="Username">
+    <input id="pass-input" type="password" class="w-full border p-2 mb-4 rounded" placeholder="Password">
+    <button onclick="cekLogin()" class="bg-indigo-600 text-white w-full p-2 rounded">Login</button>
   </div>
 </div>
 
-<!-- ADMIN DASHBOARD -->
-<div id="admin-dashboard" class="hidden flex flex-col min-h-screen">
+<!-- DASHBOARD -->
+<div id="admin-dashboard" class="hidden p-6">
 
-<header class="bg-white shadow px-6 py-4 flex justify-between items-center">
-  <h1 class="font-black text-lg">🛠️ IPSRS - RS Baptis Batu</h1>
-  <div class="flex gap-2">
-    <button onclick="exportKePDF()" class="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Export PDF</button>
-    <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-4 py-2 rounded-xl uppercase hover:bg-slate-50">Logout</button>
+<div class="flex justify-between mb-4">
+  <div>
+    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="bg-indigo-600 text-white px-4 py-2 rounded">Antrian Aktif</button>
+    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="bg-gray-300 px-4 py-2 rounded">Riwayat</button>
   </div>
-</header>
-
-<div class="p-6 flex flex-col gap-4 flex-1 overflow-auto">
-
-<div class="flex justify-between items-center">
-  <div class="flex gap-2 bg-white p-1.5 rounded-2xl border shadow-sm">
-    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md">ANTRIAN AKTIF</button>
-    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500">RIWAYAT SELESAI</button>
-  </div>
-  <div class="flex items-center gap-3 bg-white px-5 py-2.5 rounded-2xl border border-slate-200">
-    <p class="text-[9px] font-bold text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
-    <span id="stat-count" class="text-2xl font-black text-indigo-600 leading-none">0</span>
-  </div>
+  <div class="font-bold">Total: <span id="stat-count">0</span></div>
 </div>
 
-<div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
+<div class="bg-white rounded-xl shadow overflow-auto">
 <table class="w-full text-sm">
-<thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+<thead class="bg-gray-100">
 <tr>
-<th class="p-4 text-left">Foto</th>
-<th class="p-4 text-left">Waktu</th>
-<th class="p-4 text-left">Alat</th>
-<th class="p-4 text-left">Lokasi</th>
-<th class="p-4 text-left">Masalah</th>
-<th class="p-4 text-left">Urgensi</th>
-<th class="p-4 text-left">Teknisi</th>
-<th class="p-4 text-left">Catatan / Status</th>
+<th class="p-2">Waktu</th>
+<th>Alat</th>
+<th>Lokasi</th>
+<th>Masalah</th>
+<th>Urgensi</th>
+<th>Teknisi</th>
+<th>Catatan / Status</th>
 </tr>
 </thead>
 <tbody id="tabel-laporan"></tbody>
@@ -69,132 +48,132 @@ body { margin:0; font-family: Inter, sans-serif; background-color:#f8fafc; }
 </div>
 
 </div>
-</div>
 
 <script>
-// Supabase config
 const URL_PROYEK = "https://hcqyfhndihjpuihjzusx.supabase.co";
-const KEY_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
+const KEY_ANON = "ISI_DENGAN_ANON_KEY_ANDA";
 const DAFTAR_TEKNISI = ["DIDIT","SUSANTO","LUCIA","ROKIM","BAMBANG","PURNOMO","TWIN"];
 
 let db;
 let MASTER_DATA = [];
 let MODE_VIEW = 'Aktif';
 
-// Inisialisasi Supabase
 window.onload = function(){
   db = supabase.createClient(URL_PROYEK, KEY_ANON);
 };
 
-// Login
 function cekLogin(){
-  const u = document.getElementById('user-input').value.trim();
-  const p = document.getElementById('pass-input').value.trim();
-  if(u==="admin" && p==="admin123"){
-    document.getElementById('login-panel').style.display='none';
-    document.getElementById('admin-dashboard').classList.remove('hidden');
+  if(user-input.value==="admin" && pass-input.value==="admin123"){
+    login-panel.style.display="none";
+    admin-dashboard.classList.remove("hidden");
     muatData();
     aktifkanRealtime();
-  } else {
-    alert("Username / Password salah!");
-  }
+  } else alert("Login salah");
 }
 
-// Load data
 async function muatData(){
-  const { data, error } = await db.from('laporan_perbaikan').select('*');
-  if(!error){
-    // URUT TERBARU DI ATAS
-    MASTER_DATA = (data || []).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-    renderTable();
-  } else {
-    console.error("Load data error:", error);
-  }
+  const { data } = await db.from('laporan_perbaikan').select('*');
+  MASTER_DATA = (data||[]).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
+  renderTable();
 }
 
-// Tombol Selesai
-function klikSelesai(id){
-  const catatanInput = document.getElementById('catatan-'+id);
-  if(!catatanInput.value.trim()){
-    alert('Isi catatan dulu!');
-    return;
-  }
-  updateDb(id, {status:'Selesai', catatan: catatanInput.value.trim()})
-    .then(()=>{
-      renderTable(); // refresh tabel otomatis
-    });
-}
-
-// Render tabel
 function renderTable(){
   const tbody = document.getElementById('tabel-laporan');
-  let list = MODE_VIEW==='Aktif' ? 
-             MASTER_DATA.filter(d => d.status!=='Selesai') : 
-             MASTER_DATA.filter(d => d.status==='Selesai');
+  let list = MODE_VIEW==='Aktif'
+    ? MASTER_DATA.filter(d=>d.status!=='Selesai')
+    : MASTER_DATA.filter(d=>d.status==='Selesai');
 
-  // URUT TERBARU DI ATAS
-  list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  list.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
 
-  document.getElementById('stat-count').innerText = list.length;
+  stat-count.innerText = list.length;
   tbody.innerHTML = '';
 
   list.forEach(l=>{
     const tgl = new Date(l.created_at);
-    const jam = tgl.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const jam = tgl.toLocaleDateString('id-ID')+" "+tgl.toLocaleTimeString('id-ID');
     const isEditable = MODE_VIEW==='Aktif';
-    const fotoSrc = l.foto_url ? `${URL_PROYEK}/storage/v1/object/public/foto_alat/${l.foto_url}` : 'https://placehold.co/100x100?text=NA';
-    const urgensiDisplay = l.urgensi || 'Biasa'; // fallback default
 
     tbody.innerHTML += `
-<tr>
-<td class="p-2 text-center"><img src="${fotoSrc}" class="w-12 h-12 object-cover rounded-lg mx-auto shadow-sm" onerror="this.src='https://placehold.co/100x100?text=NA'"></td>
-<td>${jam}</td>
-<td>${l.nama_alat}</td>
+<tr class="border-t">
+<td class="p-2">${jam}</td>
+
+<td>
+  <div class="font-bold">${l.nama_alat}</div>
+  <div class="text-xs text-indigo-600">👤 ${l.nama_pelapor || '-'}</div>
+</td>
+
 <td>${l.lokasi}</td>
 <td>${l.isi_laporan}</td>
+
 <td>
-${isEditable ? `<select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
-  <option value="Biasa" ${(!l.urgensi || l.urgensi==='Biasa')?'selected':''}>Biasa</option>
-  <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
-  <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
-</select>` : urgensiDisplay}
+${isEditable ? `
+<select onchange="updateDb('${l.id}',{urgensi:this.value})">
+<option value="Biasa" ${(!l.urgensi||l.urgensi==='Biasa')?'selected':''}>Biasa</option>
+<option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
+<option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
+</select>` : (l.urgensi||'Biasa')}
 </td>
-<td>${isEditable ? `<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})" class="w-full text-[9px] font-black p-2 border rounded-lg bg-white outline-none shadow-sm">
+
+<td>
+${isEditable ? `
+<select onchange="handleTeknisi('${l.id}',this.value)">
+<option value="">-- Pilih Teknisi --</option>
 ${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-</select>` : (l.ditugaskan_ke || '')}</td>
-<td>${isEditable ? `<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." class="border rounded-lg p-1 w-full">
-<button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>` : (l.catatan||'')}</td>
+</select>` : (l.ditugaskan_ke||'-')}
+</td>
+
+<td>
+${isEditable ? `
+<input id="catatan-${l.id}" class="border p-1 rounded w-full" value="${l.catatan||''}">
+<button onclick="klikSelesai('${l.id}')" class="bg-black text-white px-2 py-1 mt-1 rounded">SELESAI</button>
+` : (l.catatan||'-')}
+</td>
+
 </tr>`;
   });
 }
 
-// Update database
 async function updateDb(id,dataUpdate){
   const { error } = await db.from('laporan_perbaikan').update(dataUpdate).eq('id',id);
-  if(error){
-    console.error("Update gagal:", error);
-    alert("Update gagal, cek console!");
-    return;
-  }
-  await muatData();
+  if(error){ alert("Update gagal"); console.error(error); }
+  else await muatData();
 }
 
-// Mode view
+async function handleTeknisi(id,value){
+  if(!value){
+    alert("Teknisi wajib dipilih!");
+    return;
+  }
+  await updateDb(id,{ditugaskan_ke:value});
+}
+
+async function klikSelesai(id){
+  const row = MASTER_DATA.find(x=>x.id==id);
+  if(!row.ditugaskan_ke){
+    alert("Pilih teknisi dulu!");
+    return;
+  }
+
+  const catatan = document.getElementById('catatan-'+id).value.trim();
+  if(!catatan){
+    alert("Isi catatan dulu!");
+    return;
+  }
+
+  await updateDb(id,{
+    status:'Selesai',
+    catatan:catatan
+  });
+}
+
 function setMode(m){
   MODE_VIEW=m;
-  document.getElementById('btn-mode-aktif').className = m==='Aktif'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
-  document.getElementById('btn-mode-selesai').className = m==='Selesai'?'px-6 py-2 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md':'px-6 py-2 rounded-xl font-bold text-[10px] text-slate-500';
   renderTable();
 }
 
-function exportKePDF(){
-  alert("Fitur export PDF sementara di-skip dulu");
-}
-
-// Realtime Supabase
 function aktifkanRealtime(){
   db.channel('any')
-    .on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=> muatData())
+    .on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=>muatData())
     .subscribe();
 }
 </script>
