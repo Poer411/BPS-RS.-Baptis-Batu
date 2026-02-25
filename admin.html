@@ -104,7 +104,7 @@ function cekLogin(){
 async function muatData(){
   const { data, error } = await db.from('laporan_perbaikan').select('*');
   if(!error){
-    // Urut terbaru di atas
+    // URUT TERBARU DI ATAS
     MASTER_DATA = (data || []).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     renderTable();
   } else {
@@ -131,8 +131,8 @@ function renderTable(){
   let list = MODE_VIEW==='Aktif' ? 
              MASTER_DATA.filter(d => d.status!=='Selesai') : 
              MASTER_DATA.filter(d => d.status==='Selesai');
-  
-  // Urut terbaru di atas
+
+  // URUT TERBARU DI ATAS
   list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
   document.getElementById('stat-count').innerText = list.length;
