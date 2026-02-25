@@ -104,12 +104,14 @@ function cekLogin(){
 async function muatData(){
   const { data, error } = await db.from('laporan_perbaikan').select('*');
   if(!error){
-    // URUTAN TERBARU DI ATAS
-    MASTER_DATA = (data || []).sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
+    // Urut terbaru di atas
+    MASTER_DATA = (data || []).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
     renderTable();
+  } else {
+    console.error("Load data error:", error);
   }
 }
- 
+
 // Tombol Selesai
 function klikSelesai(id){
   const catatanInput = document.getElementById('catatan-'+id);
@@ -117,14 +119,22 @@ function klikSelesai(id){
     alert('Isi catatan dulu!');
     return;
   }
-  updateDb(id, {status:'Selesai', catatan: catatanInput.value.trim()});
+  updateDb(id, {status:'Selesai', catatan: catatanInput.value.trim()})
+    .then(()=>{
+      renderTable(); // refresh tabel otomatis
+    });
 }
 
 // Render tabel
 function renderTable(){
   const tbody = document.getElementById('tabel-laporan');
-  let list = MODE_VIEW==='Aktif'? MASTER_DATA.filter(d=>d.status!=='Selesai') : MASTER_DATA.filter(d=>d.status==='Selesai');
+  let list = MODE_VIEW==='Aktif' ? 
+             MASTER_DATA.filter(d => d.status!=='Selesai') : 
+             MASTER_DATA.filter(d => d.status==='Selesai');
+  
+  // Urut terbaru di atas
   list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
   document.getElementById('stat-count').innerText = list.length;
   tbody.innerHTML = '';
 
@@ -149,7 +159,7 @@ function renderTable(){
 <td>${isEditable?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'BELUM SELESAI'})">
 ${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
 </select>`:l.ditugaskan_ke}</td>
-<td>${isEditable?`<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." onchange="updateDb('${l.id}',{catatan:this.value})" class="border rounded-lg p-1 w-full">
+<td>${isEditable?`<input id="catatan-${l.id}" type="text" value="${l.catatan||''}" placeholder="Catatan..." class="border rounded-lg p-1 w-full">
 <button onclick="klikSelesai('${l.id}')" class="bg-slate-800 text-white px-2 py-1 rounded mt-1">SELESAI</button>`:l.catatan||''}</td>
 </tr>`;
   });
@@ -178,12 +188,13 @@ function exportKePDF(){
   alert("Fitur export PDF sementara di-skip dulu");
 }
 
+// Realtime Supabase
 function aktifkanRealtime(){
-  db.channel('any').on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=>muatData()).subscribe();
+  db.channel('any')
+    .on('postgres_changes',{event:'*',schema:'public',table:'laporan_perbaikan'},()=> muatData())
+    .subscribe();
 }
 </script>
 
 </body>
 </html>
-
-
