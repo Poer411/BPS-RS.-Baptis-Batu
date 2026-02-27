@@ -69,13 +69,13 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1250px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1350px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
                     </thead>
                     <tbody id="tabel-laporan" class="divide-y divide-slate-100">
-                        <tr><td colspan="8" class="text-center py-20 italic text-slate-300 uppercase font-black">Memuat Data...</td></tr>
+                        <tr><td colspan="9" class="text-center py-20 italic text-slate-300 uppercase font-black">Memuat Data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -93,9 +93,7 @@
         let MASTER_DATA = [];
         let MODE_VIEW = 'Aktif';
 
-        window.onload = () => { 
-            db = supabase.createClient(SB_URL, SB_KEY); 
-        };
+        window.onload = () => { db = supabase.createClient(SB_URL, SB_KEY); };
 
         function cekLogin() {
             const u = document.getElementById('user-input').value;
@@ -138,7 +136,18 @@
             }
 
             document.getElementById('stat-count').innerText = list.length;
-            thead.innerHTML = `<th class="w-16 text-center">Foto</th><th class="w-32">Lapor</th>${MODE_VIEW==='Selesai'?'<th class="w-32">Selesai</th><th class="w-24 text-indigo-600">Durasi</th>':''}<th class="w-40">Aset & Lokasi</th><th>Masalah</th><th class="w-24 text-center">Urgensi</th><th class="w-28 text-center">Teknisi</th><th class="w-52 text-right pr-6">${MODE_VIEW==='Aktif'?'Aksi':'Hasil'}</th>`;
+
+            thead.innerHTML = `
+                <th class="w-16 text-center">Foto</th>
+                <th class="w-32">Lapor</th>
+                ${MODE_VIEW==='Selesai'?'<th class="w-32">Selesai</th><th class="w-24 text-indigo-600">Durasi</th>':''}
+                <th class="w-40">Aset & Lokasi</th>
+                <th>Masalah</th>
+                <th class="w-24 text-center">Urgensi</th>
+                <th class="w-28 text-center">Teknisi</th>
+                <th class="w-44 text-center">Hasil Perbaikan</th>
+                <th class="w-32 text-right pr-6">Aksi</th>
+            `;
 
             tbody.innerHTML = '';
             list.forEach(l => {
@@ -156,7 +165,19 @@
                     <td class="p-2"><div class="italic text-[10px] text-slate-600 leading-relaxed">"${l.isi_laporan}"</div></td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1"><option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option><option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option><option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option></select>`:l.urgensi}</td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}</td>
-                    <td class="p-2 text-right pr-4">${MODE_VIEW==='Aktif'?`<div class="flex flex-col gap-1.5"><button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black py-1.5 rounded uppercase">Kirim Petugas</button><input type="text" id="ket-${l.id}" placeholder="Input hasil..." class="p-1.5 border rounded text-[9px] outline-none"><button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black py-1.5 rounded uppercase">Selesai</button></div>`:`<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}</td>
+                    
+                    <td class="p-2 text-center">
+                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Input hasil kerja..." class="w-full p-2 border rounded text-[10px] outline-none focus:border-indigo-500">` : `<div class="text-indigo-900 text-[10px] font-bold italic text-left">${l.keterangan_admin||'-'}</div>`}
+                    </td>
+
+                    <td class="p-2 text-right pr-4">
+                        ${MODE_VIEW==='Aktif' ? `
+                            <div class="flex flex-col gap-1.5">
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black py-2 rounded uppercase tracking-wider hover:bg-sky-600 transition-all">Kirim Petugas</button>
+                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black py-2 rounded uppercase tracking-wider hover:bg-emerald-700 transition-all">Selesai</button>
+                            </div>
+                        ` : `<span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">CLOSED</span>`}
+                    </td>
                 </tr>`;
             });
         }
@@ -165,9 +186,9 @@
 
         async function prosesSelesai(id, t1) {
             const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Wajib isi hasil!");
+            if(!ket) return alert("Wajib isi hasil perbaikan!");
             const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
-            if(confirm(`Selesaikan laporan?`)) {
+            if(confirm(`Selesaikan laporan ini?`)) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
                 muatData();
             }
@@ -187,11 +208,11 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             let listPDF = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-            const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','MASALAH','TEKNISI']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','TEKNISI','HASIL']];
+            const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','MASALAH','TEKNISI','HASIL']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','TEKNISI','HASIL']];
             const b = listPDF.map((l, i) => {
                 const t1 = new Date(l.created_at).toLocaleString('id-ID'), t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
                 const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
-                return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
+                return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke, ''] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
             });
             doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
