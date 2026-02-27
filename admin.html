@@ -19,8 +19,6 @@
         th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px !important; }
         td { font-size: 11px; vertical-align: top; padding: 12px 8px !important; }
         .hidden { display: none !important; }
-        
-        /* Animasi Putar untuk tombol refresh */
         .spin-anim { animation: spin 0.5s linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -39,10 +37,7 @@
         window.onload = function() {
             try {
                 db = supabase.createClient(SB_URL.trim(), SB_KEY.trim());
-                console.log("Sistem Siap.");
-            } catch (e) {
-                alert("Koneksi Database Gagal.");
-            }
+            } catch (e) { alert("Koneksi Database Gagal."); }
         };
 
         function cekLogin() {
@@ -51,23 +46,16 @@
             if (u === "admin" && p === "admin123") {
                 document.getElementById('login-panel').style.display = 'none';
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                refreshManual(); // Langsung ambil data setelah login
+                refreshManual();
                 aktifkanRealtime();
-            } else {
-                alert("Username/Password Salah.");
-            }
+            } else { alert("Akses Ditolak."); }
         }
 
-        // FUNGSI REFRESH MANUAL (Bisa dipanggil tombol)
         async function refreshManual() {
             const btn = document.getElementById('btn-refresh-icon');
             if(btn) btn.classList.add('spin-anim');
-            
             await muatData();
-            
-            setTimeout(() => {
-                if(btn) btn.classList.remove('spin-anim');
-            }, 500);
+            setTimeout(() => { if(btn) btn.classList.remove('spin-anim'); }, 500);
         }
 
         async function muatData() {
@@ -77,8 +65,7 @@
                 MASTER_DATA = data || [];
                 renderTable();
             } catch (err) {
-                console.error(err.message);
-                document.getElementById('tabel-laporan').innerHTML = `<tr><td colspan="7" class="text-center p-10 text-red-500 font-bold">Error: ${err.message}</td></tr>`;
+                document.getElementById('tabel-laporan').innerHTML = `<tr><td colspan="7" class="text-center p-10 text-red-500 font-bold">Error Koneksi</td></tr>`;
             }
         }
 
@@ -89,7 +76,7 @@
             tbody.innerHTML = '';
 
             if (list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-20 text-slate-400 font-bold uppercase tracking-widest">Tidak Ada Laporan</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-20 text-slate-400 font-bold uppercase tracking-widest">Data Kosong</td></tr>';
                 return;
             }
 
@@ -98,147 +85,44 @@
                 const jamLapor = tgl.toLocaleDateString('id-ID', {day:'2-digit', month:'short'}) + " - " + tgl.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
                 const rowClass = l.urgensi === 'Darurat' ? 'bg-red-50' : (l.urgensi === 'Segera' ? 'bg-yellow-50' : 'bg-white');
 
-                let optT = `<option value="">-- Pilih Teknisi --</option>`;
+                let optT = `<option value="">-- Pilih --</option>`;
                 DAFTAR_TEKNISI.forEach(t => optT += `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`);
 
                 tbody.innerHTML += `
                 <tr class="${rowClass} hover:bg-slate-100 border-b border-slate-100 transition-all">
                     <td class="text-center p-2">
-                        <img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-xl mx-auto shadow-sm border border-slate-200" onerror="this.src='https://placehold.co/100x100?text=NA'">
+                        <img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-14 h-14 object-cover rounded-lg mx-auto shadow-sm border" onerror="this.src='https://placehold.co/100x100?text=NA'">
                     </td>
                     <td class="font-bold text-slate-500 uppercase p-2 leading-tight">${jamLapor}</td>
                     <td class="p-2">
-                        <div class="font-black text-slate-800 uppercase leading-none mb-1 text-[12px]">${l.nama_alat}</div>
-                        <div class="text-[9px] text-indigo-600 font-bold uppercase tracking-tighter">📍 ${l.lokasi}</div>
+                        <div class="font-black text-slate-800 uppercase leading-none mb-1 text-[11px]">${l.nama_alat}</div>
+                        <div class="text-[9px] text-indigo-600 font-bold uppercase">📍 ${l.lokasi}</div>
                     </td>
                     <td class="p-2">
-                        <div class="bg-white/60 p-3 rounded-xl border border-slate-200 italic text-slate-700 text-[13px] leading-snug shadow-sm">
+                        <div class="bg-white/60 p-2 rounded-lg border italic text-slate-700 text-[12px] leading-tight">
                             "${l.isi_laporan}"
-                            <div class="not-italic font-black text-[9px] text-slate-400 mt-2 uppercase tracking-widest">Oleh: ${l.nama_pelapor}</div>
+                            <div class="not-italic font-black text-[8px] text-slate-400 mt-1 uppercase">Oleh: ${l.nama_pelapor}</div>
                         </div>
                     </td>
                     <td class="p-2">
-                        <select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[10px] font-black p-2.5 border-2 rounded-xl bg-white outline-none shadow-sm focus:border-indigo-500 transition-all uppercase cursor-pointer">
+                        <select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[10px] font-black p-2 border-2 rounded-lg bg-white outline-none focus:border-indigo-500 uppercase">
                             <option value="Biasa" ${l.urgensi === 'Biasa' ? 'selected' : ''}>🟢 Biasa</option>
                             <option value="Segera" ${l.urgensi === 'Segera' ? 'selected' : ''}>🟡 Segera</option>
                             <option value="Darurat" ${l.urgensi === 'Darurat' ? 'selected' : ''}>🔴 Darurat</option>
                         </select>
                     </td>
                     <td class="p-2">
-                        <select onchange="updateDb('${l.id}', {ditugaskan_ke: this.value, status: 'Proses'})" class="w-full text-[10px] font-black p-2.5 border-2 rounded-xl bg-white outline-none shadow-sm focus:border-indigo-500 transition-all uppercase cursor-pointer">
+                        <select onchange="updateDb('${l.id}', {ditugaskan_ke: this.value, status: 'Proses'})" class="w-full text-[10px] font-black p-2 border-2 rounded-lg bg-white outline-none focus:border-indigo-500 uppercase">
                             ${optT}
                         </select>
                     </td>
-                    <td class="text-right p-2 pr-4">
+                    <td class="p-2">
                         <div class="flex flex-col gap-1.5">
-                            <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 hover:bg-sky-600 text-white text-[9px] font-black py-2.5 rounded-xl uppercase shadow-md active:scale-95 transition-all">Kirim</button>
-                            ${MODE_VIEW === 'Aktif' ? `<button onclick="updateDb('${l.id}', {status: 'Selesai'})" class="bg-slate-800 hover:bg-black text-white text-[9px] font-black py-2.5 rounded-xl uppercase shadow-md active:scale-95 transition-all">Selesai</button>` : ''}
-                        </div>
-                    </td>
-                </tr>`;
-            });
-        }
-
-        async function updateDb(id, dataUpdate) {
-            try {
-                await db.from('laporan_perbaikan').update(dataUpdate).eq('id', id);
-                await muatData();
-            } catch (e) { alert("Gagal Update"); }
-        }
-
-        async function kirimTelegram(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const msg = `🎯 *PENUGASAN IPSRS*%0A👷 *Petugas:* ${l.ditugaskan_ke}%0A🛠️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A⚠️ *Urgensi:* ${l.urgensi.toUpperCase()}`;
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("🚀 Terkirim!");
-        }
-
-        function setMode(m) {
-            MODE_VIEW = m;
-            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-7 py-2.5 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all' : 'px-7 py-2.5 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
-            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-7 py-2.5 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all' : 'px-7 py-2.5 rounded-xl font-bold text-[10px] text-slate-500 transition-all';
-            renderTable();
-        }
-
-        function aktifkanRealtime() {
-            db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe();
-        }
-
-        function exportKePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const dataFilter = MODE_VIEW === 'Aktif' ? MASTER_DATA.filter(d => d.status !== 'Selesai') : MASTER_DATA.filter(d => d.status === 'Selesai');
-            const rows = dataFilter.map((l, i) => [i + 1, new Date(l.created_at).toLocaleString('id-ID'), l.nama_alat, l.lokasi, l.isi_laporan, l.urgensi, l.ditugaskan_ke]);
-            doc.text(`LAPORAN KERJA IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
-            doc.autoTable({ startY: 20, head: [['NO', 'WAKTU', 'ALAT', 'LOKASI', 'MASALAH', 'URGENSI', 'TEKNISI']], body: rows, styles: { fontSize: 7 } });
-            doc.save(`Laporan_IPSRS.pdf`);
-        }
-    </script>
-</head>
-<body>
-
-    <div id="login-panel" class="flex items-center justify-center min-h-screen bg-slate-900">
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
-            <div class="mt-8 space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl border-2 outline-none font-bold text-center focus:border-indigo-600">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 outline-none font-bold text-center focus:border-indigo-600">
-                <button onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase shadow-lg active:scale-95 transition-all">Buka Dashboard</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-dashboard" class="app-container hidden">
-        <div class="header-fixed">
-            <nav class="px-6 py-3 flex justify-between items-center bg-white border-b">
-                <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ IPSRS <span class="text-indigo-600 uppercase">Baptis Batu</span></h1>
-                <div class="flex gap-2">
-                    <button onclick="exportKePDF()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-all">Export PDF</button>
-                    <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2.5 rounded-xl uppercase hover:bg-slate-50">Logout</button>
-                </div>
-            </nav>
-            
-            <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50">
-                <div class="flex bg-white p-1.5 rounded-2xl border shadow-sm">
-                    <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-7 py-2.5 rounded-xl font-bold text-[10px] bg-indigo-600 text-white shadow-md transition-all">ANTRIAN AKTIF</button>
-                    <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-7 py-2.5 rounded-xl font-bold text-[10px] text-slate-500 transition-all">RIWAYAT SELESAI</button>
-                </div>
-                
-                <div class="flex items-center gap-3">
-                    <button onclick="refreshManual()" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm hover:bg-indigo-50 transition-all active:scale-90 group" title="Refresh Data">
-                        <span id="btn-refresh-icon" class="block text-indigo-600 text-lg">🔄</span>
-                    </button>
-                    
-                    <div class="flex items-center gap-4 bg-white px-6 py-2 rounded-2xl border border-slate-200 shadow-sm">
-                        <p class="text-[9px] font-black text-slate-400 uppercase leading-none text-right">Total<br>Data</p>
-                        <span id="stat-count" class="text-3xl font-black text-indigo-600 leading-none">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="content-scrollable">
-            <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-2xl overflow-hidden min-w-[1100px]">
-                <table class="w-full text-left table-fixed border-collapse">
-                    <thead class="bg-slate-50 border-b sticky top-0 z-10">
-                        <tr>
-                            <th class="w-24 text-center">Visual</th>
-                            <th class="w-32">Waktu Masuk</th>
-                            <th class="w-48">Aset & Lokasi</th>
-                            <th>Kronologi Masalah</th>
-                            <th class="w-40 text-center">Urgensi</th>
-                            <th class="w-40">Teknisi</th>
-                            <th class="w-28 text-right pr-6">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-laporan" class="divide-y divide-slate-100">
-                        <tr><td colspan="7" class="text-center py-24 text-slate-300">Menghubungkan...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</body>
-</html>
+                            <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Kirim Petugas</button>
+                            
+                            ${MODE_VIEW === 'Aktif' ? `
+                                <input type="text" id="ket-${l.id}" placeholder="Keterangan hasil..." class="w-full p-2 border border-slate-300 rounded-lg text-[10px] outline-none focus:border-emerald-500">
+                                <button onclick="prosesSelesai('${l.id}')" class="bg-emerald-600 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Selesaikan</button>
+                            ` : `
+                                <div class="text-[9px] bg-slate-100 p-2 rounded-lg font-bold border border-slate-200">
+                                    <span class="text-slate-400 block mb-1">HASIL PERBAIKAN:
