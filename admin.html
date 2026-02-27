@@ -69,7 +69,7 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1100px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1200px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
@@ -111,6 +111,22 @@
             if (!error) { MASTER_DATA = data; renderTable(); }
         }
 
+        function hitungDurasi(tglAwal, tglAkhir) {
+            const mulai = new Date(tglAwal);
+            const selesai = new Date(tglAkhir);
+            const diff = selesai - mulai;
+
+            const hari = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const jam = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const menit = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            let res = "";
+            if (hari > 0) res += `${hari} Hari `;
+            if (jam > 0) res += `${jam} Jam `;
+            res += `${menit} Menit`;
+            return res;
+        }
+
         function renderTable() {
             const tbody = document.getElementById('tabel-laporan');
             const thead = document.getElementById('table-head-row');
@@ -130,14 +146,14 @@
             document.getElementById('stat-count').innerText = list.length;
 
             thead.innerHTML = `
-                <th class="w-20 text-center">Foto</th>
-                <th class="w-32">Waktu Lapor</th>
-                ${MODE_VIEW === 'Selesai' ? '<th class="w-32">Waktu Selesai</th>' : ''}
-                <th class="w-48">Aset / Lokasi</th>
+                <th class="w-16 text-center">Foto</th>
+                <th class="w-28">Waktu Lapor</th>
+                ${MODE_VIEW === 'Selesai' ? '<th class="w-28">Waktu Selesai</th><th class="w-28 text-indigo-600">Durasi Kerja</th>' : ''}
+                <th class="w-40">Aset / Lokasi</th>
                 <th>Masalah</th>
-                <th class="w-28 text-center">Urgensi</th>
-                <th class="w-32 text-center">Teknisi</th>
-                <th class="w-56 text-right pr-6">${MODE_VIEW === 'Aktif' ? 'Aksi Admin' : 'Hasil Perbaikan'}</th>
+                <th class="w-24 text-center">Urgensi</th>
+                <th class="w-28 text-center">Teknisi</th>
+                <th class="w-48 text-right pr-6">${MODE_VIEW === 'Aktif' ? 'Aksi Admin' : 'Hasil Perbaikan'}</th>
             `;
 
             tbody.innerHTML = '';
@@ -149,44 +165,43 @@
                 tbody.innerHTML += `
                 <tr class="${urgenCol} border-b hover:bg-slate-50">
                     <td class="text-center p-2">
-                        <img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-12 h-12 object-cover rounded shadow border" onerror="this.src='https://placehold.co/100'">
+                        <img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-10 h-10 object-cover rounded shadow border" onerror="this.src='https://placehold.co/100'">
                     </td>
-                    <td class="p-2 font-bold text-slate-500 uppercase text-[10px]">${tMasuk}</td>
-                    ${MODE_VIEW === 'Selesai' ? `<td class="p-2 font-bold text-emerald-600 uppercase text-[10px]">${tSelesai}</td>` : ''}
+                    <td class="p-2 font-bold text-slate-500 uppercase text-[9px]">${tMasuk}</td>
+                    ${MODE_VIEW === 'Selesai' ? `
+                        <td class="p-2 font-bold text-emerald-600 uppercase text-[9px]">${tSelesai}</td>
+                        <td class="p-2 font-black text-indigo-600 text-[9px] uppercase leading-tight">${l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai)}</td>
+                    ` : ''}
                     <td class="p-2">
-                        <div class="font-black text-slate-800 uppercase text-[11px] leading-tight">${l.nama_alat}</div>
-                        <div class="text-[9px] text-indigo-600 font-bold uppercase">📍 ${l.lokasi}</div>
+                        <div class="font-black text-slate-800 uppercase text-[10px] leading-tight">${l.nama_alat}</div>
+                        <div class="text-[8px] text-indigo-600 font-bold uppercase">📍 ${l.lokasi}</div>
                     </td>
                     <td class="p-2">
-                        <div class="bg-white/70 p-2 rounded border border-slate-200 italic text-[11px] leading-tight">"${l.isi_laporan}"</div>
+                        <div class="bg-white/70 p-2 rounded border border-slate-200 italic text-[10px] leading-tight">"${l.isi_laporan}"</div>
                     </td>
                     <td class="p-2 text-center">
                         ${MODE_VIEW === 'Aktif' ? `
-                            <select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[10px] font-black p-2 border rounded bg-white">
+                            <select onchange="updateDb('${l.id}', {urgensi: this.value})" class="w-full text-[9px] font-black p-1.5 border rounded bg-white">
                                 <option value="Biasa" ${l.urgensi === 'Biasa' ? 'selected' : ''}>BIASA</option>
                                 <option value="Segera" ${l.urgensi === 'Segera' ? 'selected' : ''}>SEGERA</option>
                                 <option value="Darurat" ${l.urgensi === 'Darurat' ? 'selected' : ''}>DARURAT</option>
                             </select>
-                        ` : `
-                            <div class="text-[10px] font-black uppercase text-slate-600">${l.urgensi}</div>
-                        `}
+                        ` : `<div class="text-[9px] font-black uppercase text-slate-500">${l.urgensi}</div>`}
                     </td>
                     <td class="p-2 text-center">
                         ${MODE_VIEW === 'Aktif' ? `
-                            <select onchange="updateDb('${l.id}', {ditugaskan_ke: this.value, status: 'Proses'})" class="w-full text-[10px] font-black p-2 border rounded bg-white">
+                            <select onchange="updateDb('${l.id}', {ditugaskan_ke: this.value, status: 'Proses'})" class="w-full text-[9px] font-black p-1.5 border rounded bg-white">
                                 <option value="">-- Pilih --</option>
                                 ${DAFTAR_TEKNISI.map(t => `<option value="${t}" ${l.ditugaskan_ke === t ? 'selected' : ''}>${t}</option>`).join('')}
                             </select>
-                        ` : `
-                            <div class="text-[10px] font-black uppercase text-indigo-700">${l.ditugaskan_ke || '-'}</div>
-                        `}
+                        ` : `<div class="text-[9px] font-black uppercase text-indigo-700">${l.ditugaskan_ke || '-'}</div>`}
                     </td>
                     <td class="p-2 text-right pr-4">
                         ${MODE_VIEW === 'Aktif' ? `
                             <div class="flex flex-col gap-1.5">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow">Kirim Telegram</button>
-                                <input type="text" id="ket-${l.id}" placeholder="Hasil perbaikan..." class="p-2 border rounded-lg text-[10px] outline-none border-2 focus:border-emerald-500">
-                                <button onclick="prosesSelesai('${l.id}')" class="bg-emerald-600 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow">Set Selesai</button>
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow">Kirim Instruksi</button>
+                                <input type="text" id="ket-${l.id}" placeholder="Hasil perbaikan..." class="p-2 border rounded-lg text-[9px] outline-none border-2 focus:border-emerald-500">
+                                <button onclick="prosesSelesai('${l.id}', '${l.created_at}')" class="bg-emerald-600 text-white text-[9px] font-black py-2 rounded-lg uppercase shadow">Set Selesai</button>
                             </div>
                         ` : `
                             <div class="p-2 bg-indigo-50 rounded border border-indigo-100 text-indigo-900 text-[10px] font-bold italic leading-tight">
@@ -198,14 +213,19 @@
             });
         }
 
-        async function prosesSelesai(id) {
+        async function prosesSelesai(id, tglMasuk) {
             const ket = document.getElementById(`ket-${id}`).value.trim();
-            if (!ket) return alert("Wajib isi keterangan hasil perbaikan!");
-            if (confirm("Laporan dianggap selesai? Data ini tidak bisa diubah kembali.")) {
+            if (!ket) return alert("Hasil perbaikan wajib diisi!");
+            
+            const tglSelesai = new Date().toISOString();
+            const durasi = hitungDurasi(tglMasuk, tglSelesai);
+
+            if (confirm(`Selesaikan laporan? Durasi kerja: ${durasi}`)) {
                 await db.from('laporan_perbaikan').update({ 
                     status: 'Selesai', 
                     keterangan_admin: ket, 
-                    tanggal_selesai: new Date().toISOString() 
+                    tanggal_selesai: tglSelesai,
+                    durasi_pekerjaan: durasi 
                 }).eq('id', id);
                 muatData();
             }
@@ -238,16 +258,16 @@
             
             const head = MODE_VIEW === 'Aktif' 
                 ? [['NO', 'TGL MASUK', 'ALAT', 'LOKASI', 'MASALAH', 'TEKNISI']]
-                : [['NO', 'TGL MASUK', 'TGL SELESAI', 'ALAT', 'LOKASI', 'TEKNISI', 'HASIL PERBAIKAN']];
+                : [['NO', 'TGL MASUK', 'TGL SELESAI', 'DURASI', 'ALAT', 'LOKASI', 'TEKNISI', 'HASIL']];
 
             const body = dataFilter.map((l, i) => {
                 return MODE_VIEW === 'Aktif' 
                 ? [i+1, new Date(l.created_at).toLocaleString(), l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke]
-                : [i+1, new Date(l.created_at).toLocaleString(), new Date(l.tanggal_selesai).toLocaleString(), l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
+                : [i+1, new Date(l.created_at).toLocaleString(), new Date(l.tanggal_selesai).toLocaleString(), l.durasi_pekerjaan, l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
             });
 
             doc.text(`REKAPITULASI IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
-            doc.autoTable({ startY: 20, head: head, body: body, styles: { fontSize: 7 } });
+            doc.autoTable({ startY: 20, head: head, body: body, styles: { fontSize: 6 } });
             doc.save(`Laporan_IPSRS_${MODE_VIEW}.pdf`);
         }
 
