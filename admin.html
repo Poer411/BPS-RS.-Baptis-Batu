@@ -240,23 +240,54 @@
         }
 
         function exportKePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const dataFilter = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-            
-            const head = MODE_VIEW === 'Aktif' 
-                ? [['NO', 'TGL MASUK', 'ALAT', 'LOKASI', 'MASALAH', 'TEKNISI']]
-                : [['NO', 'MASUK', 'SELESAI', 'DURASI', 'ALAT', 'LOKASI', 'TEKNISI', 'HASIL PERBAIKAN']];
+    const { jsPDF } = window.jspdf;
+    // Menggunakan format landscape (l) agar muat banyak kolom
+    const doc = new jsPDF('l', 'mm', 'a4'); 
+    
+    const dataFilter = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
+    
+    // Header tabel PDF
+    const head = MODE_VIEW === 'Aktif' 
+        ? [['NO', 'TGL MASUK', 'ALAT', 'LOKASI', 'MASALAH', 'URGENSI', 'TEKNISI']]
+        : [['NO', 'MASUK', 'SELESAI', 'DURASI', 'ALAT', 'LOKASI', 'TEKNISI', 'HASIL PERBAIKAN']];
 
-            const body = dataFilter.map((l, i) => {
-                const t1 = new Date(l.created_at).toLocaleString('id-ID');
-                const t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
-                return MODE_VIEW === 'Aktif' 
-                ? [i+1, t1, l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke]
-                : [i+1, t1, t2, l.durasi_pekerjaan || '-', l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
-            });
+    // Isi tabel PDF
+    const body = dataFilter.map((l, i) => {
+        const t1 = new Date(l.created_at).toLocaleString('id-ID');
+        const t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
+        
+        // Logika agar durasi muncul di PDF meskipun data lama kosong
+        const durasiFinal = l.durasi_pekerjaan ? l.durasi_pekerjaan : hitungDurasi(l.created_at, l.tanggal_selesai);
 
-            doc.text(`LAPORAN IPSRS - RS BAPTIS BATU (${MODE_VIEW.toUpperCase()})`, 14, 15);
+        return MODE_VIEW === 'Aktif' 
+        ? [i+1, t1, l.nama_alat, l.lokasi, l.isi_laporan, l.urgensi, l.ditugaskan_ke]
+        : [i+1, t1, t2, durasiFinal, l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
+    });
+
+    // Judul laporan di dalam PDF
+    doc.setFontSize(14);
+    doc.text(`LAPORAN KERJA IPSRS - RS BAPTIS BATU`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Kategori: ${MODE_VIEW.toUpperCase()} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, 22);
+
+    // Pengaturan tabel otomatis
+    doc.autoTable({ 
+        startY: 28, 
+        head: head, 
+        body: body, 
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillBlue: [79, 70, 229], halign: 'center' }, // Warna biru indigo
+        columnStyles: {
+            0: { cellWidth: 10, halign: 'center' }, // No
+            3: { cellWidth: 25, fontStyle: 'bold' }  // Durasi (untuk mode Selesai)
+        }
+    });
+
+    doc.save(`Laporan_IPSRS_${MODE_VIEW}_${new Date().getTime()}.pdf`);
+}
+
+        doc.text(`LAPORAN IPSRS - RS BAPTIS BATU (${MODE_VIEW.toUpperCase()})`, 14, 15);
             doc.autoTable({ 
                 startY: 20, 
                 head: head, 
@@ -278,3 +309,4 @@
     </script>
 </body>
 </html>
+
