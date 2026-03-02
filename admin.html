@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard BPS - RS Baptis Batu</title>
+    <title>Admin Dashboard IPSRS - RS Baptis Batu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,7 +18,7 @@
         .content-scrollable { flex-grow: 1; overflow-y: auto; padding: 15px; }
         .hidden { display: none !important; }
         
-        /* Pengaturan Teks Tabel */
+        /* Pengaturan Teks Tabel Agar Tidak Melar */
         th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px !important; }
         td { 
             font-size: 11px; 
@@ -36,7 +36,7 @@
 
     <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-[100]">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">BPS</span></h2>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
             <p class="text-[9px] font-bold text-slate-400 mb-8 uppercase tracking-widest">RS BAPTIS BATU</p>
             <div class="space-y-4">
                 <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold text-center border-2 focus:border-indigo-600">
@@ -48,7 +48,7 @@
 
     <div id="admin-dashboard" class="app-container hidden">
         <header class="header-fixed px-6 py-3 flex justify-between items-center shadow-sm">
-            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ BPS <span class="text-indigo-600">BAPTIS BATU</span></h1>
+            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ IPSRS <span class="text-indigo-600">BAPTIS BATU</span></h1>
             <div class="flex gap-2">
                 <button onclick="exportKePDF()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-all">Export PDF</button>
                 <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2.5 rounded-xl uppercase hover:bg-slate-50">Keluar</button>
@@ -79,7 +79,7 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1100px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1150px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
@@ -157,7 +157,7 @@
                 <th class="w-20 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-40 text-center">Hasil</th>
-                <th class="w-24 text-right pr-4">Aksi</th>
+                <th class="w-36 text-right pr-6">Aksi</th>
             `;
 
             tbody.innerHTML = '';
@@ -189,11 +189,11 @@
                     </td>
                     <td class="p-2 text-right pr-4">
                         ${MODE_VIEW==='Aktif' ? `
-                            <div class="flex flex-col gap-1.5">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black py-1.5 rounded uppercase hover:bg-sky-600 transition-all">Kirim</button>
-                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black py-1.5 rounded uppercase hover:bg-emerald-700 transition-all">Selesai</button>
+                            <div class="flex flex-row justify-end gap-1.5">
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-2.5 py-2 rounded uppercase hover:bg-sky-600 transition-all">Kirim</button>
+                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-2.5 py-2 rounded uppercase hover:bg-emerald-700 transition-all">Selesai</button>
                             </div>
-                        ` : `<span class="text-[9px] font-black text-slate-300">CLOSED</span>`}
+                        ` : `<span class="text-[9px] font-black text-slate-300 tracking-widest uppercase">Closed</span>`}
                     </td>
                 </tr>`;
             });
@@ -231,9 +231,9 @@
                 const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
                 return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.nama_pelapor, l.isi_laporan, l.ditugaskan_ke] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin];
             });
-            doc.text(`LAPORAN BPS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
-            doc.save(`BPS_${MODE_VIEW}.pdf`);
+            doc.save(`IPSRS_${MODE_VIEW}.pdf`);
         }
 
         function aktifkanRealtime() { db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); }
@@ -241,11 +241,10 @@
         function kirimTelegram(id) {
             const l = MASTER_DATA.find(x => x.id == id);
             if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const msg = `🎯 *TUGAS BARU BPS*%0APetugas: ${l.ditugaskan_ke}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}%0APelapor: ${l.nama_pelapor}`;
+            const msg = `🎯 *TUGAS BARU IPSRS*%0APetugas: ${l.ditugaskan_ke}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}%0APelapor: ${l.nama_pelapor}`;
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
             alert("Instruksi Terkirim!");
         }
     </script>
 </body>
 </html>
-
