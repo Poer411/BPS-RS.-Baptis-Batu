@@ -20,13 +20,8 @@
         
         th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px !important; }
         td { 
-            font-size: 11px; 
-            vertical-align: middle; 
-            padding: 10px 8px !important; 
-            border-bottom: 1px solid #f1f5f9;
-            word-wrap: break-word; 
-            overflow-wrap: break-word; 
-            white-space: normal !important; 
+            font-size: 11px; vertical-align: middle; padding: 10px 8px !important; 
+            border-bottom: 1px solid #f1f5f9; word-wrap: break-word; overflow-wrap: break-word; white-space: normal !important; 
         }
         .btn-active { background-color: #4f46e5 !important; color: white !important; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
     </style>
@@ -92,7 +87,6 @@
     </div>
 
     <script>
-        // -- CONFIG & VARIABLES --
         const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
@@ -103,7 +97,6 @@
         let MASTER_DATA = [];
         let MODE_VIEW = 'Aktif';
 
-        // -- LOGIN FUNCTION --
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
@@ -112,22 +105,17 @@
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 muatData();
                 aktifkanRealtime();
-            } else { 
-                alert("Username atau Password Salah!"); 
-            }
+            } else { alert("Akses Ditolak!"); }
         }
 
-        // -- INITIALIZE DATABASE --
-        window.onload = () => { 
-            db = supabase.createClient(SB_URL, SB_KEY); 
-        };
+        window.onload = () => { db = supabase.createClient(SB_URL, SB_KEY); };
 
-        // -- DATA FUNCTIONS --
         async function muatData() {
-            try {
-                const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-                if (!error) { MASTER_DATA = data; renderTable(); }
-            } catch (err) { console.error(err); }
+            const { data, error } = await db.from('laporan_perbaikan').select('*');
+            if (!error) { 
+                MASTER_DATA = data; 
+                renderTable(); 
+            }
         }
 
         function hitungDurasi(t1, t2) {
@@ -136,21 +124,34 @@
             const diff = selesai - mulai;
             const menitTotal = Math.floor(diff / 60000);
             if (menitTotal < 60) return menitTotal + "m";
-            const jam = Math.floor(menitTotal / 60), sisaMenit = menitTotal % 60;
-            return jam + "j " + sisaMenit + "m";
+            return Math.floor(menitTotal / 60) + "j " + (menitTotal % 60) + "m";
+        }
+
+        function getFilteredData() {
+            let list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
+            
+            if (MODE_VIEW === 'Selesai') {
+                // Urutkan Riwayat Selesai: Yang paling baru selesai di atas
+                list.sort((a, b) => new Date(b.tanggal_selesai) - new Date(a.tanggal_selesai));
+                
+                // Filter Tanggal
+                const tglMulai = document.getElementById('filter-mulai').value;
+                const tglSampai = document.getElementById('filter-sampai').value;
+                if (tglMulai && tglSampai) {
+                    const s = new Date(tglMulai + "T00:00:00"), e = new Date(tglSampai + "T23:59:59");
+                    list = list.filter(d => { const t = new Date(d.tanggal_selesai); return t >= s && t <= e; });
+                }
+            } else {
+                // Antrian Aktif: Yang paling lama (urgent) di atas
+                list.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            }
+            return list;
         }
 
         function renderTable() {
             const tbody = document.getElementById('tabel-laporan');
             const thead = document.getElementById('table-head-row');
-            const tglMulai = document.getElementById('filter-mulai').value, tglSampai = document.getElementById('filter-sampai').value;
-
-            let list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-
-            if (MODE_VIEW === 'Selesai' && tglMulai && tglSampai) {
-                const s = new Date(tglMulai + "T00:00:00"), e = new Date(tglSampai + "T23:59:59");
-                list = list.filter(d => { const t = new Date(d.tanggal_selesai); return t >= s && t <= e; });
-            }
+            const list = getFilteredData();
 
             document.getElementById('stat-count').innerText = list.length;
 
@@ -164,7 +165,7 @@
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-40 text-center">Hasil</th>
-                <th class="w-44 text-right pr-6">Aksi</th>
+                <th class="w-40 text-right pr-6">Aksi</th>
             `;
 
             tbody.innerHTML = '';
@@ -176,7 +177,7 @@
                 const urgen = l.urgensi || "Biasa";
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition-all">
                     <td class="text-center p-2"><img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-8 h-8 object-cover rounded shadow" onerror="this.src='https://placehold.co/100'"></td>
                     <td class="p-2 font-bold text-slate-500 text-[10px] uppercase">${t1}</td>
                     ${MODE_VIEW === 'Selesai' ? `<td class="p-2 font-bold text-emerald-600 text-[10px] uppercase">${t2}</td><td class="p-2 font-black text-indigo-600 text-[10px] uppercase">${dur}</td>` : ''}
@@ -186,31 +187,27 @@
                     </td>
                     <td class="p-2 font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</td>
                     <td class="p-2 text-[10px] text-slate-600 italic leading-relaxed">${l.isi_laporan}</td>
-                    
-                    <td class="p-2 text-center uppercase font-black text-[9px]">
+                    <td class="p-2 text-center">
                         ${MODE_VIEW==='Aktif'?`
                         <select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1 text-[9px] font-bold">
                             <option value="Biasa" ${urgen==='Biasa'?'selected':''}>Biasa</option>
                             <option value="Segera" ${urgen==='Segera'?'selected':''}>Segera</option>
                             <option value="Darurat" ${urgen==='Darurat'?'selected':''}>Darurat</option>
-                        </select>`:urgen}
+                        </select>`:`<span class="text-[9px] font-bold">${urgen}</span>`}
                     </td>
-
                     <td class="p-2 text-center uppercase font-black text-[9px]">
                         ${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1 text-[9px] font-bold"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}
                     </td>
-
                     <td class="p-2">
-                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Ketik hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
+                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
                     </td>
-
                     <td class="p-2 text-right">
                         ${MODE_VIEW==='Aktif' ? `
                             <div class="flex flex-row justify-end gap-2">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-sky-600 transition-all">Kirim</button>
-                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-emerald-700 transition-all">Selesai</button>
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Kirim</button>
+                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Selesai</button>
                             </div>
-                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4 italic uppercase">SELESAI</span>`}
+                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4 italic">CLOSED</span>`}
                     </td>
                 </tr>`;
             });
@@ -220,7 +217,7 @@
 
         async function prosesSelesai(id, t1) {
             const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Harap isi Hasil Perbaikan!");
+            if(!ket) return alert("Wajib isi Hasil Perbaikan!");
             const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
             if(confirm(`Selesaikan laporan ini?`)) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
@@ -241,7 +238,8 @@
         function exportKePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            let listPDF = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
+            const listPDF = getFilteredData(); // Mengambil data yang sudah ter-filter di layar
+            
             const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','PELAPOR','MASALAH','TEKNISI']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','PELAPOR','TEKNISI','HASIL']];
             const b = listPDF.map((l, i) => {
                 const t1 = new Date(l.created_at).toLocaleString('id-ID'), t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
@@ -250,22 +248,19 @@
             });
             doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
-            doc.save(`IPSRS_${MODE_VIEW}.pdf`);
+            doc.save(`IPSRS_${MODE_VIEW}_Export.pdf`);
         }
 
-        function aktifkanRealtime() { 
-            db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); 
-        }
+        function aktifkanRealtime() { db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); }
 
         function kirimTelegram(id) {
             const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi terlebih dahulu!");
+            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
             const urgen = l.urgensi || "Biasa";
             const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim ke Telegram!");
+            alert("Instruksi Terkirim!");
         }
     </script>
 </body>
 </html>
-
