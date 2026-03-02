@@ -18,11 +18,10 @@
         .content-scrollable { flex-grow: 1; overflow-y: auto; padding: 15px; }
         .hidden { display: none !important; }
         
-        /* Pengaturan Teks Tabel Agar Tidak Melar */
         th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px !important; }
         td { 
             font-size: 11px; 
-            vertical-align: top; 
+            vertical-align: middle; 
             padding: 12px 8px !important; 
             border-bottom: 1px solid #f1f5f9;
             word-wrap: break-word; 
@@ -79,7 +78,7 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1150px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1200px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
@@ -154,10 +153,10 @@
                 <th class="w-32">Aset & Lokasi</th>
                 <th class="w-24 text-indigo-600">Pelapor</th>
                 <th class="w-48">Masalah</th> 
-                <th class="w-20 text-center">Urgensi</th>
+                <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-40 text-center">Hasil</th>
-                <th class="w-36 text-right pr-6">Aksi</th>
+                <th class="w-40 text-right pr-6">Aksi</th>
             `;
 
             tbody.innerHTML = '';
@@ -166,9 +165,12 @@
                 const t1 = new Date(l.created_at).toLocaleString('id-ID', opt);
                 const t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID', opt) : '-';
                 const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
+                
+                // Urgensi Default "Biasa"
+                const urgen = l.urgensi || "Biasa";
 
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50 transition-colors">
                     <td class="text-center p-2"><img src="${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}" class="w-8 h-8 object-cover rounded shadow" onerror="this.src='https://placehold.co/100'"></td>
                     <td class="p-2 font-bold text-slate-500 text-[10px] uppercase">${t1}</td>
                     ${MODE_VIEW === 'Selesai' ? `<td class="p-2 font-bold text-emerald-600 text-[10px] uppercase">${t2}</td><td class="p-2 font-black text-indigo-600 text-[10px] uppercase">${dur}</td>` : ''}
@@ -176,75 +178,4 @@
                         <div class="font-black text-slate-800 uppercase text-[10px]">${l.nama_alat}</div>
                         <div class="text-[8px] text-indigo-600 font-bold uppercase mt-0.5">📍 ${l.lokasi}</div>
                     </td>
-                    <td class="p-2 font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</td>
-                    <td class="p-2 text-[10px] text-slate-600 italic leading-relaxed">${l.isi_laporan}</td>
-                    <td class="p-2 text-center uppercase font-black text-[9px]">
-                        ${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1 text-[9px]"><option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option><option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option><option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option></select>`:l.urgensi}
-                    </td>
-                    <td class="p-2 text-center uppercase font-black text-[9px]">
-                        ${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1 text-[9px]"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}
-                    </td>
-                    <td class="p-2">
-                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Ketik hasil..." class="w-full p-2 border rounded text-[10px] outline-none focus:border-indigo-500">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
-                    </td>
-                    <td class="p-2 text-right pr-4">
-                        ${MODE_VIEW==='Aktif' ? `
-                            <div class="flex flex-row justify-end gap-1.5">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-2.5 py-2 rounded uppercase hover:bg-sky-600 transition-all">Kirim</button>
-                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-2.5 py-2 rounded uppercase hover:bg-emerald-700 transition-all">Selesai</button>
-                            </div>
-                        ` : `<span class="text-[9px] font-black text-slate-300 tracking-widest uppercase">Closed</span>`}
-                    </td>
-                </tr>`;
-            });
-        }
-
-        async function updateDb(id, obj) { await db.from('laporan_perbaikan').update(obj).eq('id', id); muatData(); }
-
-        async function prosesSelesai(id, t1) {
-            const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Isi hasil perbaikan dulu!");
-            const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
-            if(confirm(`Selesaikan laporan ini?`)) {
-                await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
-                muatData();
-            }
-        }
-
-        function setMode(m) {
-            MODE_VIEW = m;
-            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-7 py-2.5 rounded-xl transition-all btn-active' : 'px-7 py-2.5 rounded-xl text-slate-500 transition-all';
-            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-7 py-2.5 rounded-xl transition-all btn-active' : 'px-7 py-2.5 rounded-xl text-slate-500 transition-all';
-            document.getElementById('date-filter-box').className = m === 'Selesai' ? 'flex items-center gap-2 bg-white p-2 rounded-2xl border shadow-sm' : 'hidden';
-            renderTable();
-        }
-
-        function resetFilter() { document.getElementById('filter-mulai').value = ""; document.getElementById('filter-sampai').value = ""; renderTable(); }
-
-        function exportKePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            let listPDF = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-            const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','PELAPOR','MASALAH','TEKNISI']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','PELAPOR','TEKNISI','HASIL']];
-            const b = listPDF.map((l, i) => {
-                const t1 = new Date(l.created_at).toLocaleString('id-ID'), t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
-                const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
-                return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.nama_pelapor, l.isi_laporan, l.ditugaskan_ke] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin];
-            });
-            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
-            doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
-            doc.save(`IPSRS_${MODE_VIEW}.pdf`);
-        }
-
-        function aktifkanRealtime() { db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); }
-
-        function kirimTelegram(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const msg = `🎯 *TUGAS BARU IPSRS*%0APetugas: ${l.ditugaskan_ke}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}%0APelapor: ${l.nama_pelapor}`;
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim!");
-        }
-    </script>
-</body>
-</html>
+                    <td class="p-2 font-bold text-indigo-700 text-
