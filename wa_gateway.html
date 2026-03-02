@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IPSRS WA GATEWAY - ACTIVE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background: #075e54; color: white; display: flex; flex-direction: column; align-items: center; padding: 50px; }
+        .card { background: white; color: #333; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        #status { font-weight: bold; color: #25d366; margin-bottom: 10px; }
+        .log-box { width: 100%; height: 200px; background: #f0f0f0; margin-top: 20px; border-radius: 10px; overflow-y: auto; text-align: left; padding: 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>WA GATEWAY RUNNING</h2>
+        <div id="status">● Menunggu Perintah Admin...</div>
+        <div class="log-box" id="logs">-- Log Pengiriman --</div>
+    </div>
+
+    <script>
+        const SB_URL = "ISI_URL_SUPABASE_BAPAK";
+        const SB_KEY = "ISI_KEY_SUPABASE_BAPAK";
+        const FONNTE_TOKEN = "ISI_TOKEN_FONNTE_BAPAK"; // Contoh pakai Fonnte
+
+        const db = supabase.createClient(SB_URL, SB_KEY);
+
+        // Listener Realtime: Pantau perubahan di tabel
+        db.channel('wa_trigger')
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'laporan_perbaikan' }, payload => {
+              if (payload.new.kirim_wa === true) {
+                  prosesKirimWA(payload.new);
+              }
+          })
+          .subscribe();
+
+        async function prosesKirimWA(data) {
+            updateLog(`Mengirim WA untuk: ${data.nama_alat}...`);
+
+            const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${data.ditugaskan_ke}\n⚙️ *Alat:* ${data.nama_alat}\n📍 *Lokasi:* ${data.lokasi}\n📝 *Masalah:* ${data.isi_laporan}\n⚠️ *Urgensi:* ${data.urgensi}`;
+
+            // PROSES KIRIM KE API WA (Contoh: Fonnte)
+            try {
+                const send = await fetch('https://api.fonnte.com/send', {
+                    method: 'POST',
+                    headers: { 'Authorization': FONNTE_TOKEN },
+                    body: new URLSearchParams({
+                        'target': 'NOMOR_WA_TUJUAN_ATAU_GRUP', // misal: 08123456789
+                        'message': pesan
+                    })
+                });
+
+                if (send.ok) {
+                    updateLog(`✅ Berhasil Terkirim ke WA.`);
+                    // SETELAH SUKSES, KEMBALIKAN kirim_wa ke false
+                    await db.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
+                }
+            } catch (err) {
+                updateLog(`❌ Gagal: ${err.message}`);
+            }
+        }
+
+        function updateLog(txt) {
+            const box = document.getElementById('logs');
+            box.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${txt}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
