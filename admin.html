@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin BPS - RS Baptis Batu</title>
+    <title>Admin Dashboard IPSRS - RS Baptis Batu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,28 +24,29 @@
             border-bottom: 1px solid #f1f5f9; word-wrap: break-word; overflow-wrap: break-word; white-space: normal !important; 
         }
         .btn-active { background-color: #4f46e5 !important; color: white !important; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .table-card { background: white; border-radius: 2rem; border: 1px solid #e2e8f0; shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); overflow: hidden; }
     </style>
 </head>
 <body>
 
     <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-[100]">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">BPS</span></h2>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
             <p class="text-[9px] font-bold text-slate-400 mb-8 uppercase tracking-widest">RS BAPTIS BATU</p>
             <div class="space-y-4">
                 <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold text-center border-2 focus:border-indigo-600">
                 <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl border-2 outline-none font-bold text-center focus:border-indigo-600">
-                <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">Buka Dashboard</button>
+                <button type="button" onclick="cekLogin()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl uppercase shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">Masuk Sistem</button>
             </div>
         </div>
     </div>
 
     <div id="admin-dashboard" class="app-container hidden">
         <header class="header-fixed px-6 py-3 flex justify-between items-center shadow-sm">
-            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ BPS <span class="text-indigo-600">BAPTIS BATU</span></h1>
+            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ IPSRS <span class="text-indigo-600">BAPTIS BATU</span></h1>
             <div class="flex gap-2">
                 <button onclick="exportKePDF()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-all">Export PDF</button>
-                <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2.5 rounded-xl uppercase hover:bg-slate-50">Keluar</button>
+                <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2.5 rounded-xl uppercase hover:bg-slate-50">Log Out</button>
             </div>
         </header>
 
@@ -64,16 +65,16 @@
             </div>
 
             <div class="flex items-center gap-3 ml-auto">
-                <button onclick="muatData()" class="bg-white p-3 rounded-2xl border shadow-sm hover:bg-indigo-50 transition-all">🔄</button>
+                <button onclick="muatData()" class="bg-white p-3 rounded-2xl border shadow-sm hover:bg-indigo-50 transition-all">🔄 Refresh</button>
                 <div class="flex items-center gap-4 bg-white px-6 py-2 rounded-2xl border shadow-sm">
-                    <p class="text-[9px] font-black text-slate-400 uppercase leading-none text-right">Total<br>Laporan</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase leading-none text-right">Total<br>Data</p>
                     <span id="stat-count" class="text-3xl font-black text-indigo-600">0</span>
                 </div>
             </div>
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1250px]">
+            <div class="table-card min-w-[1250px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
@@ -87,6 +88,7 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
         const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
@@ -97,6 +99,7 @@
         let MASTER_DATA = [];
         let MODE_VIEW = 'Aktif';
 
+        // --- AUTH ---
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
@@ -105,33 +108,37 @@
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 muatData();
                 aktifkanRealtime();
-            } else { alert("Akses Ditolak!"); }
+            } else { alert("User/Password Salah!"); }
         }
 
+        // --- DATABASE & DATA ---
         window.onload = () => { db = supabase.createClient(SB_URL, SB_KEY); };
 
         async function muatData() {
             const { data, error } = await db.from('laporan_perbaikan').select('*');
-            if (!error) { 
-                MASTER_DATA = data; 
-                renderTable(); 
-            }
+            if (!error) { MASTER_DATA = data; renderTable(); }
         }
 
         function hitungDurasi(t1, t2) {
             if (!t1 || !t2) return "-";
             const mulai = new Date(t1), selesai = new Date(t2);
             const diff = selesai - mulai;
-            const menitTotal = Math.floor(diff / 60000);
-            if (menitTotal < 60) return menitTotal + "m";
-            return Math.floor(menitTotal / 60) + "j " + (menitTotal % 60) + "m";
+            const totalMenit = Math.floor(diff / 60000);
+            const totalJam = Math.floor(totalMenit / 60);
+            const hari = Math.floor(totalJam / 24);
+            const sisaJam = totalJam % 24;
+            const sisaMenit = totalMenit % 60;
+
+            if (hari > 0) return `${hari}h ${sisaJam}j ${sisaMenit}m`;
+            if (totalJam > 0) return `${totalJam}j ${sisaMenit}m`;
+            return `${totalMenit}m`;
         }
 
         function getFilteredData() {
             let list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
             
             if (MODE_VIEW === 'Selesai') {
-                // Urutan: Yang baru saja selesai tampil di atas (Descending)
+                // Urutkan Selesai: Paling baru selesai di atas
                 list.sort((a, b) => new Date(b.tanggal_selesai) - new Date(a.tanggal_selesai));
                 
                 // Filter Tanggal
@@ -142,12 +149,13 @@
                     list = list.filter(d => { const t = new Date(d.tanggal_selesai); return t >= s && t <= e; });
                 }
             } else {
-                // Urutan Aktif: Yang baru saja lapor tampil di atas (Descending)
+                // Urutkan Aktif: Laporan masuk terbaru di atas
                 list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             }
             return list;
         }
 
+        // --- UI RENDER ---
         function renderTable() {
             const tbody = document.getElementById('tabel-laporan');
             const thead = document.getElementById('table-head-row');
@@ -157,14 +165,14 @@
 
             thead.innerHTML = `
                 <th class="w-12 text-center">Foto</th>
-                <th class="w-24">Lapor</th>
-                ${MODE_VIEW==='Selesai'?'<th class="w-24">Selesai</th><th class="w-20 text-indigo-600">Durasi</th>':''}
+                <th class="w-24">Masuk</th>
+                ${MODE_VIEW==='Selesai'?'<th class="w-24">Selesai</th><th class="w-24 text-indigo-600">Durasi</th>':''}
                 <th class="w-32">Aset & Lokasi</th>
                 <th class="w-24 text-indigo-600">Pelapor</th>
                 <th class="w-48">Masalah</th> 
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
-                <th class="w-40 text-center">Hasil</th>
+                <th class="w-40 text-center">Hasil/Keterangan</th>
                 <th class="w-44 text-right pr-6">Aksi</th>
             `;
 
@@ -173,7 +181,7 @@
                 const opt = { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false };
                 const t1 = new Date(l.created_at).toLocaleString('id-ID', opt);
                 const t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID', opt) : '-';
-                const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
+                const dur = hitungDurasi(l.created_at, l.tanggal_selesai);
                 const urgen = l.urgensi || "Biasa";
 
                 tbody.innerHTML += `
@@ -187,40 +195,47 @@
                     </td>
                     <td class="p-2 font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</td>
                     <td class="p-2 text-[10px] text-slate-600 italic leading-relaxed">${l.isi_laporan}</td>
-                    <td class="p-2 text-center">
+                    <td class="p-2 text-center uppercase font-black text-[9px]">
                         ${MODE_VIEW==='Aktif'?`
                         <select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1 text-[9px] font-bold">
                             <option value="Biasa" ${urgen==='Biasa'?'selected':''}>Biasa</option>
                             <option value="Segera" ${urgen==='Segera'?'selected':''}>Segera</option>
                             <option value="Darurat" ${urgen==='Darurat'?'selected':''}>Darurat</option>
-                        </select>`:`<span class="text-[9px] font-bold">${urgen}</span>`}
+                        </select>`:urgen}
                     </td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">
                         ${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1 text-[9px] font-bold"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}
                     </td>
                     <td class="p-2">
-                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
+                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Ketik hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
                     </td>
                     <td class="p-2 text-right">
                         ${MODE_VIEW==='Aktif' ? `
                             <div class="flex flex-row justify-end gap-2">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Kirim</button>
-                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow active:scale-95 transition-all">Selesai</button>
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-sky-600">Kirim</button>
+                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-emerald-700">Selesai</button>
                             </div>
-                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4 italic">CLOSED</span>`}
+                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4 italic">Selesai</span>`}
                     </td>
                 </tr>`;
             });
         }
 
+        // --- ACTIONS ---
         async function updateDb(id, obj) { await db.from('laporan_perbaikan').update(obj).eq('id', id); muatData(); }
 
         async function prosesSelesai(id, t1) {
             const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Wajib isi Hasil Perbaikan!");
-            const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
+            if(!ket) return alert("Hasil perbaikan wajib diisi!");
+            const t2 = new Date().toISOString();
+            const dur = hitungDurasi(t1, t2);
             if(confirm(`Selesaikan laporan ini?`)) {
-                await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
+                await db.from('laporan_perbaikan').update({ 
+                    status: 'Selesai', 
+                    keterangan_admin: ket, 
+                    tanggal_selesai: t2, 
+                    durasi_pekerjaan: dur 
+                }).eq('id', id);
                 muatData();
             }
         }
@@ -243,12 +258,12 @@
             const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','PELAPOR','MASALAH','TEKNISI']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','PELAPOR','TEKNISI','HASIL']];
             const b = listPDF.map((l, i) => {
                 const t1 = new Date(l.created_at).toLocaleString('id-ID'), t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
-                const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
+                const dur = hitungDurasi(l.created_at, l.tanggal_selesai);
                 return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.nama_pelapor, l.isi_laporan, l.ditugaskan_ke] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin];
             });
-            doc.text(`LAPORAN BPS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
-            doc.save(`BPS_${MODE_VIEW}_Export.pdf`);
+            doc.save(`IPSRS_${MODE_VIEW}_${new Date().getTime()}.pdf`);
         }
 
         function aktifkanRealtime() { db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); }
@@ -257,11 +272,10 @@
             const l = MASTER_DATA.find(x => x.id == id);
             if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
             const urgen = l.urgensi || "Biasa";
-            const msg = `🎯 *TUGAS BARU BPS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
+            const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim!");
+            alert("Berhasil! Instruksi terkirim ke Telegram petugas.");
         }
     </script>
 </body>
 </html>
-
