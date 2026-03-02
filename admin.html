@@ -271,14 +271,28 @@
             doc.save(`BPS_${MODE_VIEW}.pdf`);
         }
 
-        function kirimTelegram(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const urgen = l.urgensi || "Biasa";
-            const msg = `🎯 *TUGAS BARU BPS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim!");
-        }
+        async function kirimTelegram(id) {
+    const l = MASTER_DATA.find(x => x.id == id);
+    if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
+    
+    const urgen = l.urgensi || "Biasa";
+    const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
+    
+    // 1. Tetap kirim ke Telegram (Existing)
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
+
+    // 2. TRIGGER UNTUK WA (Update kolom kirim_wa ke true)
+    const { error } = await db.from('laporan_perbaikan')
+        .update({ kirim_wa: true })
+        .eq('id', id);
+
+    if (!error) {
+        alert("Instruksi Terkirim! (Telegram & Trigger WA Aktif)");
+    } else {
+        alert("Gagal memicu trigger WA");
+    }
+}
     </script>
 </body>
 </html>
+
