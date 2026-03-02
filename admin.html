@@ -123,7 +123,7 @@
             return res + `${menit}m`;
         }
 
-        function renderTable() {
+function renderTable() {
             const tbody = document.getElementById('tabel-laporan');
             const thead = document.getElementById('table-head-row');
             const tglMulai = document.getElementById('filter-mulai').value, tglSampai = document.getElementById('filter-sampai').value;
@@ -137,13 +137,14 @@
 
             document.getElementById('stat-count').innerText = list.length;
 
+            // PENYESUAIAN LEBAR KOLOM (Masalah dibatasi w-64)
             thead.innerHTML = `
                 <th class="w-16 text-center">Foto</th>
                 <th class="w-32">Lapor</th>
                 ${MODE_VIEW==='Selesai'?'<th class="w-32">Selesai</th><th class="w-24 text-indigo-600">Durasi</th>':''}
                 <th class="w-40">Aset & Lokasi</th>
                 <th class="w-32 text-indigo-600">Pelapor</th>
-                <th>Masalah</th>
+                <th class="w-64">Masalah</th> 
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-44 text-center">Hasil Perbaikan</th>
@@ -166,12 +167,12 @@
                     
                     <td class="p-2"><div class="font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</div></td>
 
-                    <td class="p-2"><div class="italic text-[10px] text-slate-600 leading-relaxed">"${l.isi_laporan}"</div></td>
+                    <td class="p-2"><div class="italic text-[10px] text-slate-600 leading-relaxed truncate-2-lines">"${l.isi_laporan}"</div></td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1"><option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option><option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option><option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option></select>`:l.urgensi}</td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}</td>
                     
                     <td class="p-2 text-center">
-                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Input hasil kerja..." class="w-full p-2 border rounded text-[10px] outline-none focus:border-indigo-500">` : `<div class="text-indigo-900 text-[10px] font-bold italic text-left">${l.keterangan_admin||'-'}</div>`}
+                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Hasil..." class="w-full p-2 border rounded text-[10px] outline-none focus:border-indigo-500">` : `<div class="text-indigo-900 text-[10px] font-bold italic text-left">${l.keterangan_admin||'-'}</div>`}
                     </td>
 
                     <td class="p-2 text-right pr-4">
@@ -184,18 +185,6 @@
                     </td>
                 </tr>`;
             });
-        }
-
-        async function updateDb(id, obj) { await db.from('laporan_perbaikan').update(obj).eq('id', id); muatData(); }
-
-        async function prosesSelesai(id, t1) {
-            const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Wajib isi hasil perbaikan!");
-            const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
-            if(confirm(`Selesaikan laporan ini?`)) {
-                await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
-                muatData();
-            }
         }
 
         function setMode(m) {
@@ -235,4 +224,5 @@
     </script>
 </body>
 </html>
+
 
