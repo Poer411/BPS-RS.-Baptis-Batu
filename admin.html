@@ -69,13 +69,13 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1350px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1450px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
                     </thead>
                     <tbody id="tabel-laporan" class="divide-y divide-slate-100">
-                        <tr><td colspan="9" class="text-center py-20 italic text-slate-300 uppercase font-black">Memuat Data...</td></tr>
+                        <tr><td colspan="10" class="text-center py-20 italic text-slate-300 uppercase font-black">Memuat Data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -142,6 +142,7 @@
                 <th class="w-32">Lapor</th>
                 ${MODE_VIEW==='Selesai'?'<th class="w-32">Selesai</th><th class="w-24 text-indigo-600">Durasi</th>':''}
                 <th class="w-40">Aset & Lokasi</th>
+                <th class="w-32 text-indigo-600">Pelapor</th>
                 <th>Masalah</th>
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
@@ -162,6 +163,9 @@
                     <td class="p-2 font-bold text-slate-500 text-[10px] uppercase">${t1}</td>
                     ${MODE_VIEW === 'Selesai' ? `<td class="p-2 font-bold text-emerald-600 text-[10px] uppercase">${t2}</td><td class="p-2 font-black text-indigo-600 text-[10px] uppercase">${dur}</td>` : ''}
                     <td class="p-2 leading-tight"><div class="font-black text-slate-800 uppercase text-[10px]">${l.nama_alat}</div><div class="text-[8px] text-indigo-600 font-bold uppercase">📍 ${l.lokasi}</div></td>
+                    
+                    <td class="p-2"><div class="font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</div></td>
+
                     <td class="p-2"><div class="italic text-[10px] text-slate-600 leading-relaxed">"${l.isi_laporan}"</div></td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1"><option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option><option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option><option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option></select>`:l.urgensi}</td>
                     <td class="p-2 text-center uppercase font-black text-[9px]">${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}</td>
@@ -208,11 +212,11 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             let listPDF = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-            const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','MASALAH','TEKNISI','HASIL']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','TEKNISI','HASIL']];
+            const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','PELAPOR','MASALAH','TEKNISI','HASIL']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','PELAPOR','TEKNISI','HASIL']];
             const b = listPDF.map((l, i) => {
                 const t1 = new Date(l.created_at).toLocaleString('id-ID'), t2 = l.tanggal_selesai ? new Date(l.tanggal_selesai).toLocaleString('id-ID') : '-';
                 const dur = l.durasi_pekerjaan || hitungDurasi(l.created_at, l.tanggal_selesai);
-                return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.isi_laporan, l.ditugaskan_ke, ''] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.ditugaskan_ke, l.keterangan_admin];
+                return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.nama_pelapor, l.isi_laporan, l.ditugaskan_ke, ''] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin];
             });
             doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
@@ -224,7 +228,7 @@
         function kirimTelegram(id) {
             const l = MASTER_DATA.find(x => x.id == id);
             if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const msg = `🎯 *TUGAS BARU IPSRS*%0APetugas: ${l.ditugaskan_ke}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}`;
+            const msg = `🎯 *TUGAS BARU IPSRS*%0APetugas: ${l.ditugaskan_ke}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}%0APelapor: ${l.nama_pelapor}`;
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
             alert("Instruksi Terkirim!");
         }
