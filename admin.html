@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS - RS Baptis Batu</title>
+    <title>Admin IPSRS - RS Baptis Batu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,7 +22,7 @@
         td { 
             font-size: 11px; 
             vertical-align: middle; 
-            padding: 12px 8px !important; 
+            padding: 10px 8px !important; 
             border-bottom: 1px solid #f1f5f9;
             word-wrap: break-word; 
             overflow-wrap: break-word; 
@@ -78,7 +78,7 @@
         </section>
 
         <main class="content-scrollable">
-            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1200px]">
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden min-w-[1250px]">
                 <table class="w-full text-left table-fixed border-collapse">
                     <thead class="bg-slate-50 border-b sticky top-0 z-10">
                         <tr id="table-head-row"></tr>
@@ -92,7 +92,7 @@
     </div>
 
     <script>
-        // Inisialisasi Database
+        // -- CONFIG & VARIABLES --
         const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
         const TG_TOKEN = "8736128567:AAEeldbjsPqOEwgKauGd62DpzcNCJoV3KvE"; 
@@ -103,7 +103,7 @@
         let MASTER_DATA = [];
         let MODE_VIEW = 'Aktif';
 
-        // Fungsi ini harus ada dan terbaca sebelum dipanggil
+        // -- LOGIN FUNCTION --
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
@@ -113,17 +113,21 @@
                 muatData();
                 aktifkanRealtime();
             } else { 
-                alert("Akses Ditolak! Cek Username/Password."); 
+                alert("Username atau Password Salah!"); 
             }
         }
 
+        // -- INITIALIZE DATABASE --
         window.onload = () => { 
             db = supabase.createClient(SB_URL, SB_KEY); 
         };
 
+        // -- DATA FUNCTIONS --
         async function muatData() {
-            const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
-            if (!error) { MASTER_DATA = data; renderTable(); }
+            try {
+                const { data, error } = await db.from('laporan_perbaikan').select('*').order('created_at', { ascending: false });
+                if (!error) { MASTER_DATA = data; renderTable(); }
+            } catch (err) { console.error(err); }
         }
 
         function hitungDurasi(t1, t2) {
@@ -160,7 +164,7 @@
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-40 text-center">Hasil</th>
-                <th class="w-40 text-right pr-6">Aksi</th>
+                <th class="w-44 text-right pr-6">Aksi</th>
             `;
 
             tbody.innerHTML = '';
@@ -182,27 +186,31 @@
                     </td>
                     <td class="p-2 font-bold text-indigo-700 text-[10px] uppercase">${l.nama_pelapor || '-'}</td>
                     <td class="p-2 text-[10px] text-slate-600 italic leading-relaxed">${l.isi_laporan}</td>
-                    <td class="p-2 text-center">
+                    
+                    <td class="p-2 text-center uppercase font-black text-[9px]">
                         ${MODE_VIEW==='Aktif'?`
                         <select onchange="updateDb('${l.id}',{urgensi:this.value})" class="w-full border rounded p-1 text-[9px] font-bold">
                             <option value="Biasa" ${urgen==='Biasa'?'selected':''}>Biasa</option>
                             <option value="Segera" ${urgen==='Segera'?'selected':''}>Segera</option>
                             <option value="Darurat" ${urgen==='Darurat'?'selected':''}>Darurat</option>
-                        </select>`:`<span class="text-[9px] font-bold">${urgen}</span>`}
+                        </select>`:urgen}
                     </td>
+
                     <td class="p-2 text-center uppercase font-black text-[9px]">
                         ${MODE_VIEW==='Aktif'?`<select onchange="updateDb('${l.id}',{ditugaskan_ke:this.value,status:'Proses'})" class="w-full border rounded p-1 text-[9px] font-bold"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>`:(l.ditugaskan_ke||'-')}
                     </td>
+
                     <td class="p-2">
-                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
+                        ${MODE_VIEW==='Aktif' ? `<input type="text" id="ket-${l.id}" placeholder="Ketik hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-indigo-900 text-[10px] font-bold italic">${l.keterangan_admin||'-'}</div>`}
                     </td>
+
                     <td class="p-2 text-right">
                         ${MODE_VIEW==='Aktif' ? `
                             <div class="flex flex-row justify-end gap-2">
-                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow-sm active:scale-95 transition-all">Kirim</button>
-                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow-sm active:scale-95 transition-all">Selesai</button>
+                                <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-sky-600 transition-all">Kirim</button>
+                                <button onclick="prosesSelesai('${l.id}','${l.created_at}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg uppercase shadow hover:bg-emerald-700 transition-all">Selesai</button>
                             </div>
-                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4">CLOSED</span>`}
+                        ` : `<span class="text-[9px] font-black text-slate-300 pr-4 italic uppercase">Closed</span>`}
                     </td>
                 </tr>`;
             });
@@ -212,7 +220,7 @@
 
         async function prosesSelesai(id, t1) {
             const ket = document.getElementById(`ket-${id}`).value.trim();
-            if(!ket) return alert("Wajib isi Hasil Perbaikan!");
+            if(!ket) return alert("Harap isi Hasil Perbaikan!");
             const t2 = new Date().toISOString(), dur = hitungDurasi(t1, t2);
             if(confirm(`Selesaikan laporan ini?`)) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: t2, durasi_pekerjaan: dur }).eq('id', id);
@@ -245,15 +253,17 @@
             doc.save(`IPSRS_${MODE_VIEW}.pdf`);
         }
 
-        function aktifkanRealtime() { db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); }
+        function aktifkanRealtime() { 
+            db.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'laporan_perbaikan' }, () => muatData()).subscribe(); 
+        }
 
         function kirimTelegram(id) {
             const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
+            if (!l.ditugaskan_ke) return alert("Pilih Teknisi terlebih dahulu!");
             const urgen = l.urgensi || "Biasa";
             const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
             fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim!");
+            alert("Instruksi Terkirim ke Telegram!");
         }
     </script>
 </body>
