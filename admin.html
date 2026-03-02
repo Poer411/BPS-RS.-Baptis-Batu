@@ -131,7 +131,7 @@
             let list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
             
             if (MODE_VIEW === 'Selesai') {
-                // Urutkan Riwayat Selesai: Yang paling baru selesai di atas
+                // Urutan: Yang baru saja selesai tampil di atas (Descending)
                 list.sort((a, b) => new Date(b.tanggal_selesai) - new Date(a.tanggal_selesai));
                 
                 // Filter Tanggal
@@ -142,8 +142,8 @@
                     list = list.filter(d => { const t = new Date(d.tanggal_selesai); return t >= s && t <= e; });
                 }
             } else {
-                // Antrian Aktif: Yang paling lama (urgent) di atas
-                list.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                // Urutan Aktif: Yang baru saja lapor tampil di atas (Descending)
+                list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             }
             return list;
         }
@@ -165,7 +165,7 @@
                 <th class="w-24 text-center">Urgensi</th>
                 <th class="w-28 text-center">Teknisi</th>
                 <th class="w-40 text-center">Hasil</th>
-                <th class="w-40 text-right pr-6">Aksi</th>
+                <th class="w-44 text-right pr-6">Aksi</th>
             `;
 
             tbody.innerHTML = '';
@@ -238,7 +238,7 @@
         function exportKePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            const listPDF = getFilteredData(); // Mengambil data yang sudah ter-filter di layar
+            const listPDF = getFilteredData();
             
             const h = MODE_VIEW==='Aktif' ? [['NO','MASUK','ALAT','LOKASI','PELAPOR','MASALAH','TEKNISI']] : [['NO','MASUK','SELESAI','DURASI','ALAT','LOKASI','PELAPOR','TEKNISI','HASIL']];
             const b = listPDF.map((l, i) => {
