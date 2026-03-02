@@ -1,87 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>IPSRS WA GATEWAY - ACTIVE</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: sans-serif; background: #075e54; color: white; display: flex; flex-direction: column; align-items: center; padding: 50px; }
-        .card { background: white; color: #333; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
-        #status { font-weight: bold; color: #e67e22; margin-bottom: 10px; }
-        .log-box { width: 100%; height: 250px; background: #f0f0f0; margin-top: 20px; border-radius: 10px; overflow-y: auto; text-align: left; padding: 10px; font-size: 12px; font-family: monospace; color: #333; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>WA GATEWAY RUNNING</h2>
-        <div id="status">Menghubungkan ke Database...</div>
-        <div class="log-box" id="logs">-- Sistem Dimulai --</div>
-    </div>
+async function prosesKirimWA(data) {
+    // 1. DAFTAR KONTAK TEKNISI (Update Otomatis)
+    const daftarTeknisi = {
+        "DIDIT": "6281331755209",
+        "SUSANTO": "6289668467140",
+        "LUCIA": "6285708203992",
+        "ROKIM": "6285806690875",
+        "BAMBANG": "628980506696",
+        "PURNOMO": "6285100332530",
+        "TWIN": "6285646405019"
+    };
 
-    <script>
-        const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
-        const FONNTE_TOKEN = "xJ5FQgtfzyQ1XDhgVjun";
+    // Ambil nama teknisi dari database (pastikan huruf besar/kecil sama dengan daftar di atas)
+    const namaAdminPilih = data.ditugaskan_ke ? data.ditugaskan_ke.toUpperCase() : "";
+    
+    // Tentukan Nomor Tujuan (Jika nama tidak terdaftar, kirim ke nomor PURNOMO/Admin sebagai backup)
+    const nomorTujuan = daftarTeknisi[namaAdminPilih] || "6285100332530"; 
 
-        const db = supabase.createClient(SB_URL, SB_KEY);
+    // 2. Cegah Tampilan "null" agar rapi
+    const namaAlat = data.nama_alat || "Tidak disebutkan";
+    const lokasiAlat = data.lokasi || "Cek Lokasi";
+    const masalah = data.isi_laporan || "Mohon cek unit segera";
+    const urgensi = data.urgensi || "Normal";
+    const namaTeknisi = data.ditugaskan_ke || "Petugas IPSRS";
 
-        // Pantau Status Koneksi
-        updateLog("Mencoba koneksi ke Supabase...");
+    updateLog(`🔔 Trigger! Mengirim ke ${namaTeknisi} (${nomorTujuan})...`);
 
-        const channel = db.channel('wa_trigger')
-            .on('postgres_changes', { 
-                event: 'UPDATE', 
-                schema: 'public', 
-                table: 'laporan_perbaikan' 
-            }, (payload) => {
-                console.log("Perubahan terdeteksi:", payload); // Cek di console browser (F12)
-                if (payload.new.kirim_wa === true) {
-                    prosesKirimWA(payload.new);
-                }
+    const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${namaTeknisi}\n⚙️ *Alat:* ${namaAlat}\n📍 *Lokasi:* ${lokasiAlat}\n📝 *Masalah:* ${masalah}\n⚠️ *Urgensi:* ${urgensi}`;
+
+    try {
+        const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: { 'Authorization': FONNTE_TOKEN },
+            body: new URLSearchParams({
+                'target': nomorTujuan,
+                'message': pesan
             })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    document.getElementById('status').innerText = "● MONITORING AKTIF (READY)";
-                    document.getElementById('status').style.color = "#25d366";
-                    updateLog("✅ Terhubung! Menunggu perintah dari Admin...");
-                }
-            });
+        });
 
-        async function prosesKirimWA(data) {
-            updateLog(`🔔 Trigger Masuk! Mengirim WA Alat: ${data.nama_alat}`);
-
-            const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${data.ditugaskan_ke}\n⚙️ *Alat:* ${data.nama_alat}\n📍 *Lokasi:* ${data.lokasi}\n📝 *Masalah:* ${data.isi_laporan}\n⚠️ *Urgensi:* ${data.urgensi}`;
-
-            try {
-                const response = await fetch('https://api.fonnte.com/send', {
-                    method: 'POST',
-                    headers: { 'Authorization': FONNTE_TOKEN },
-                    body: new URLSearchParams({
-                        'target': '6285100332530',
-                        'message': pesan
-                    })
-                });
-
-                const result = await response.json();
-                
-                if (result.status === true) {
-                    updateLog(`✅ WA Berhasil Terkirim ke 6285100332530`);
-                    // Reset Saklar ke False agar tidak kirim berulang
-                    await db.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
-                    updateLog(`♻️ Status database direset ke standby.`);
-                } else {
-                    updateLog(`❌ Fonnte Error: ${result.reason}`);
-                }
-            } catch (err) {
-                updateLog(`❌ Gagal Total: ${err.message}`);
-            }
+        const result = await response.json();
+        
+        if (result.status === true) {
+            updateLog(`✅ Berhasil Terkirim ke ${namaTeknisi} (${nomorTujuan})`);
+            // Reset status kirim_wa agar tidak looping
+            await db.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
+            updateLog(`♻️ Sistem Standby Kembali.`);
+        } else {
+            updateLog(`❌ Fonnte Error: ${result.reason}`);
         }
-
-        function updateLog(txt) {
-            const box = document.getElementById('logs');
-            const time = new Date().toLocaleTimeString();
-            box.innerHTML += `<div>[${time}] ${txt}</div>`;
-            box.scrollTop = box.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+    } catch (err) {
+        updateLog(`❌ Gagal: ${err.message}`);
+    }
+}
