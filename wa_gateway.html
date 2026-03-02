@@ -67,56 +67,61 @@
                 }
             });
 
-        async function prosesKirimWA(data) {
-            // A. Tentukan Penerima (Teknisi + Grup)
-            const namaPilihan = data.ditugaskan_ke ? data.ditugaskan_ke.toUpperCase() : "PETUGAS";
-            const nomorTeknisi = daftarTeknisi[namaPilihan] || "6285100332530"; 
+async function prosesKirimWA(data) {
+    // 1. DATA TARGET
+    const ID_GRUP_IPSRS = "6285100332530-1501643366@g.us"; 
+    const daftarTeknisi = {
+        "DIDIT": "6281331755209",
+        "SUSANTO": "6289668467140",
+        "LUCIA": "6285708203992",
+        "ROKIM": "6285806690875",
+        "BAMBANG": "628980506696",
+        "PURNOMO": "6285100332530",
+        "TWIN": "6285646405019"
+    };
+
+    const namaPilihan = data.ditugaskan_ke ? data.ditugaskan_ke.toUpperCase() : "PETUGAS";
+    const nomorTeknisi = daftarTeknisi[namaPilihan] || "6285100332530"; 
+    const targetFinal = `${nomorTeknisi},${ID_GRUP_IPSRS}`;
+
+    // 2. FORMAT PESAN
+    const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${namaPilihan}\n⚙️ *Alat:* ${data.nama_alat || "-"}\n📍 *Lokasi:* ${data.lokasi || "-"}\n📝 *Masalah:* ${data.isi_laporan || "-"}\n⚠️ *Urgensi:* ${data.urgensi || "Normal"}`;
+
+    updateLog(`🚀 Mengirim ke ${namaPilihan} & Grup...`);
+
+    try {
+        // 3. KIRIM MENGGUNAKAN METODE JSON (LEBIH STABIL)
+        const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: { 
+                'Authorization': FONNTE_TOKEN,
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({
+                target: targetFinal,
+                message: pesan,
+                delay: '2',
+                countryCode: '62'
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.status === true) {
+            updateLog(`✅ SUKSES: Terkirim ke ${namaPilihan} & Grup.`);
             
-            // Menggabungkan nomor pribadi dan ID Grup (Pemisah Koma Tanpa Spasi)
-            const targetFinal = `${nomorTeknisi},${ID_GRUP_IPSRS}`;
-
-            // B. Bersihkan Data dari nilai NULL
-            const alat = data.nama_alat || "Alat Tidak Terdeteksi";
-            const lokasi = data.lokasi || "Cek Lokasi";
-            const masalah = data.isi_laporan || "Mohon pemeriksaan unit segera";
-            const urgensi = data.urgensi || "Normal";
-
-            updateLog(`🔔 <span class="highlight">Trigger Masuk!</span> Mengirim tugas ke ${namaPilihan}...`);
-
-            // C. Format Pesan
-            const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${namaPilihan}\n⚙️ *Alat:* ${alat}\n📍 *Lokasi:* ${lokasi}\n📝 *Masalah:* ${masalah}\n⚠️ *Urgensi:* ${urgensi}\n\n_Pesan otomatis via IPSRS Gateway_`;
-
-            try {
-                // D. Kirim ke Fonnte
-                const response = await fetch('https://api.fonnte.com/send', {
-                    method: 'POST',
-                    headers: { 'Authorization': FONNTE_TOKEN },
-                    body: new URLSearchParams({
-                        'target': targetFinal,
-                        'message': pesan,
-                        'delay': '2',
-                        'countryCode': '62'
-                    })
-                });
-
-                const result = await response.json();
-                
-                if (result.status === true) {
-                    updateLog(`✅ Berhasil Terkirim ke ${namaPilihan} & Grup.`);
-                    
-                    // E. Reset saklar kirim_wa di database agar tidak terjadi spam/loop
-                    await db.from('laporan_perbaikan')
-                        .update({ kirim_wa: false })
-                        .eq('id', data.id);
-                    
-                    updateLog(`♻️ Status database direset. Menunggu perintah selanjutnya.`);
-                } else {
-                    updateLog(`❌ Fonnte Gagal: ${result.reason}`);
-                }
-            } catch (err) {
-                updateLog(`❌ Error Koneksi: ${err.message}`);
-            }
+            // RESET DATABASE
+            await db.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
+            updateLog(`♻️ Database Standby.`);
+        } else {
+            // JIKA ERROR, TAMPILKAN DETAILNYA
+            updateLog(`❌ Fonnte Gagal: ${result.reason}`);
+            console.log("Detail Error Fonnte:", result);
         }
+    } catch (err) {
+        updateLog(`❌ Error Sistem: ${err.message}`);
+    }
+}
 
         function updateLog(txt) {
             const box = document.getElementById('logs');
