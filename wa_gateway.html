@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>IPSRS WA GATEWAY - DUAL SENDING MODE</title>
+    <title>BPS WA GATEWAY - DUAL SENDING MODE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #075e54; color: white; display: flex; flex-direction: column; align-items: center; padding: 50px; margin: 0; }
@@ -18,7 +18,7 @@
 <body>
 
     <div class="card">
-        <h2>WA GATEWAY IPSRS</h2>
+        <h2>WA GATEWAY BPS</h2>
         <div id="status">Menghubungkan ke Database...</div>
         <div class="log-box" id="logs">-- Sistem Dimulai --</div>
         <div style="margin-top:15px; font-size: 0.8em; color: #777;">Status: Dual-Sending Active (Japri + Grup)</div>
@@ -62,7 +62,7 @@
             const namaPilihan = data.ditugaskan_ke ? data.ditugaskan_ke.toUpperCase() : "PETUGAS";
             const nomorTeknisi = daftarTeknisi[namaPilihan] || "6285100332530"; 
             
-            const pesan = `🎯 *TUGAS BARU IPSRS*\n\n👤 *Teknisi:* ${namaPilihan}\n⚙️ *Alat:* ${data.nama_alat || "-"}\n📍 *Lokasi:* ${data.lokasi || "-"}\n📝 *Masalah:* ${data.isi_laporan || "-"}\n⚠️ *Urgensi:* ${data.urgensi || "Normal"}\n\n_Segera tindak lanjuti dan lapor jika selesai._`;
+            const pesan = `🎯 *TUGAS BARU BPS*\n\n👤 *Teknisi:* ${namaPilihan}\n⚙️ *Alat:* ${data.nama_alat || "-"}\n📍 *Lokasi:* ${data.lokasi || "-"}\n📝 *Masalah:* ${data.isi_laporan || "-"}\n⚠️ *Urgensi:* ${data.urgensi || "Normal"}\n\n_Segera tindak lanjuti dan lapor jika selesai._`;
 
             updateLog(`🔔 <span class="highlight">Trigger Masuk!</span> Menyiapkan pengiriman ganda...`);
 
