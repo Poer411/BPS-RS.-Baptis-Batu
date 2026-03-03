@@ -300,49 +300,49 @@
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
             doc.save(`IPSRS_${MODE_VIEW}.pdf`);
         }
+
 async function kirimTelegram(id) {
-    // 1. Cari data di Master Data untuk keperluan teks
+    // 1. Cari data mentah dari laporan ini
     const l = MASTER_DATA.find(x => x.id == id);
     
-    // 2. Ambil nilai Teknisi & Urgensi dari inputan di tabel (Dropdown/Select)
-    // Kita cari elemen select yang ada di baris tersebut
-    const row = document.querySelector(`tr[data-id="${id}"]`) || document.activeElement.closest('tr');
-    const teknisiTerpilih = row.querySelector('select:nth-of-type(2)') ? row.querySelector('select:nth-of-type(2)').value : l.ditugaskan_ke;
-    const urgenTerpilih = row.querySelector('select:nth-of-type(1)') ? row.querySelector('select:nth-of-type(1)').value : (l.urgensi || "Biasa");
+    // 2. Ambil nilai TERBARU dari dropdown yang ada di baris tersebut
+    const teknisiTerpilih = document.getElementById(`sel-tek-${id}`).value;
+    const urgenTerpilih = document.getElementById(`sel-urg-${id}`).value;
 
     if (!teknisiTerpilih) return alert("Pilih Teknisi dulu, Pak!");
 
     try {
-        // 3. UPDATE DATABASE (Ini yang memicu WA GATEWAY)
+        // 3. UPDATE DATABASE (Ini 'pelatuk' untuk WA GATEWAY)
         const { error: dbError } = await db.from('laporan_perbaikan')
             .update({ 
                 ditugaskan_ke: teknisiTerpilih, 
                 urgensi: urgenTerpilih,
                 status: 'Proses',
-                kirim_wa: true  // <--- PELATUK UTAMA
+                kirim_wa: true  // Mengubah FALSE jadi TRUE agar Gateway merespon
             })
             .eq('id', id);
 
         if (dbError) throw dbError;
 
-        // 4. KIRIM TELEGRAM
+        // 4. KIRIM KE TELEGRAM (Opsional tetap jalan)
         const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgenTerpilih}`;
         
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
 
         // 5. SELESAI
         alert("✅ Instruksi Terkirim ke WA & Telegram!");
-        muatData(); // Refresh tampilan tabel admin
+        muatData(); // Refresh tabel Admin
 
     } catch (err) {
-        console.error(err);
-        alert("Terjadi kesalahan: " + err.message);
+        console.error("Detail Error:", err);
+        alert("Gagal kirim: " + err.message);
     }
-}
-
+}        
+        
     </script>
 </body>
 </html>
+
 
 
 
