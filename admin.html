@@ -6,12 +6,15 @@
     <title>Admin Dashboard BPS - RS Baptis Batu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background-color: #f1f5f9; overflow: hidden; }
         .hidden { display: none !important; }
-        th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px; }
-        td { font-size: 11px; padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
+        th { font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; padding: 12px 8px; border-bottom: 2px solid #e2e8f0; }
+        td { font-size: 11px; padding: 12px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .btn-active { background-color: #4f46e5 !important; color: white !important; }
     </style>
 </head>
 <body>
@@ -19,6 +22,7 @@
     <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-[100]">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
             <h2 class="text-2xl font-black text-slate-800 italic mb-2 uppercase">ADMIN <span class="text-indigo-600">BPS</span></h2>
+            <p class="text-[9px] font-bold text-slate-400 mb-6 uppercase tracking-widest">RS BAPTIS BATU</p>
             <div class="space-y-4">
                 <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-2 focus:border-indigo-600 font-bold text-center">
                 <input type="password" id="pass-input" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-2 focus:border-indigo-600 font-bold text-center">
@@ -28,37 +32,50 @@
     </div>
 
     <div id="admin-dashboard" class="hidden flex flex-col h-screen">
-        <header class="bg-white p-4 flex justify-between items-center shadow-sm border-b-2 border-slate-200">
+        <header class="bg-white px-6 py-4 flex justify-between items-center shadow-sm border-b">
             <h1 class="font-black text-xs italic uppercase">🛠️ BPS <span class="text-indigo-600">BAPTIS BATU</span></h1>
-            <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-4 py-2 rounded-xl">LOG OUT</button>
+            <div class="flex gap-3">
+                <button onclick="exportKePDF()" class="bg-rose-500 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase">Export PDF</button>
+                <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2 rounded-xl uppercase">Log Out</button>
+            </div>
         </header>
 
-        <div class="p-4 flex justify-between items-center bg-slate-50 border-b">
-            <div class="bg-white p-2 rounded-xl border font-bold text-[10px] text-indigo-600">
-                TOTAL DATA: <span id="stat-count" class="font-black">0</span>
+        <section class="px-6 py-4 flex justify-between items-center bg-slate-50 border-b">
+            <div class="flex bg-white p-1 rounded-xl border font-bold text-[10px]">
+                <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-6 py-2 rounded-lg btn-active">AKTIF</button>
+                <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-6 py-2 rounded-lg text-slate-400">RIWAYAT</button>
             </div>
-            <div class="bg-white p-2 rounded-xl border font-bold text-[10px]">
-                REFRESH: <span id="timer-label" class="text-indigo-600 font-black">30s</span>
+            <div class="flex items-center gap-4">
+                <div class="bg-white px-4 py-2 rounded-xl border flex items-center gap-2">
+                    <span id="timer-label" class="text-[10px] font-black text-indigo-600">30s</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase">Refresh</span>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-xl border flex items-center gap-3">
+                    <p class="text-[9px] font-black text-slate-400 uppercase leading-none text-right">Total</p>
+                    <span id="stat-count" class="text-2xl font-black text-indigo-600">0</span>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="flex-grow overflow-auto p-4">
-            <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+        <main class="flex-grow overflow-auto p-6">
+            <div class="bg-white rounded-[2rem] shadow-sm border overflow-hidden min-w-[1200px]">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50">
                         <tr>
                             <th class="w-24">Masuk</th>
                             <th class="w-40">Alat & Lokasi</th>
+                            <th class="w-24 text-indigo-600">Pelapor</th>
                             <th>Masalah</th>
-                            <th class="w-24">Urgensi</th>
-                            <th class="w-32">Teknisi</th>
-                            <th class="w-24 text-right pr-6">Aksi</th>
+                            <th class="w-24 text-center">Urgensi</th>
+                            <th class="w-32 text-center">Teknisi</th>
+                            <th class="w-40 text-center">Hasil Perbaikan</th>
+                            <th class="w-32 text-right pr-6">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-laporan"></tbody>
                 </table>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
@@ -68,27 +85,18 @@
         const TG_CHAT_ID = "7728459706";
         const DAFTAR_TEKNISI = ["DIDIT", "SUSANTO", "LUCIA", "ROKIM", "BAMBANG", "PURNOMO", "TWIN"];
 
-        let db;
-        let MASTER_DATA = [];
-        let countdown = 30;
+        let db, MASTER_DATA = [], MODE_VIEW = 'Aktif', countdown = 30;
 
-        // Inisialisasi Supabase
-        window.onload = function() {
-            db = supabase.createClient(SB_URL, SB_KEY);
-        };
+        window.onload = () => { db = supabase.createClient(SB_URL, SB_KEY); };
 
-        // FUNGSI LOGIN (Harus ada!)
         function cekLogin() {
             const u = document.getElementById('user-input').value;
             const p = document.getElementById('pass-input').value;
             if (u === "admin" && p === "admin123") {
                 document.getElementById('login-panel').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                muatData();
-                mulaiTimer();
-            } else {
-                alert("Login Salah!");
-            }
+                muatData(); mulaiTimer();
+            } else { alert("Login Gagal!"); }
         }
 
         function mulaiTimer() {
@@ -106,33 +114,39 @@
 
         function renderTable() {
             const tbody = document.getElementById('tabel-laporan');
-            let list = MASTER_DATA.filter(d => d.status !== 'Selesai');
+            let list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
             list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             document.getElementById('stat-count').innerText = list.length;
             
             tbody.innerHTML = '';
             list.forEach(l => {
                 const t1 = new Date(l.created_at).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                const isAktif = MODE_VIEW === 'Aktif';
+                
                 tbody.innerHTML += `
-                <tr>
-                    <td class="font-bold text-slate-500 uppercase text-[9px]">${t1}</td>
-                    <td><div class="font-black uppercase">${l.nama_alat}</div><div class="text-indigo-600 text-[9px] font-bold uppercase">📍 ${l.lokasi}</div></td>
-                    <td class="italic text-slate-600">${l.isi_laporan}</td>
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="font-bold text-slate-400 text-[10px] uppercase">${t1}</td>
                     <td>
-                        <select id="sel-urg-${l.id}" class="w-full border rounded p-1 text-[9px] font-bold">
-                            <option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option>
-                            <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option>
-                            <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option>
-                        </select>
+                        <div class="font-black text-slate-800 uppercase text-[10px]">${l.nama_alat}</div>
+                        <div class="text-[8px] text-indigo-600 font-bold uppercase">📍 ${l.lokasi}</div>
+                    </td>
+                    <td class="font-bold text-indigo-800 text-[10px] uppercase">${l.nama_pelapor || '-'}</td>
+                    <td class="italic text-slate-600 leading-relaxed">${l.isi_laporan}</td>
+                    <td>
+                        ${isAktif ? `<select id="sel-urg-${l.id}" class="w-full border rounded p-1 text-[9px] font-bold"><option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>Biasa</option><option value="Segera" ${l.urgensi==='Segera'?'selected':''}>Segera</option><option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>Darurat</option></select>` : `<span class="font-black text-[9px]">${l.urgensi}</span>`}
                     </td>
                     <td>
-                        <select id="sel-tek-${l.id}" class="w-full border rounded p-1 text-[9px] font-bold">
-                            <option value="">Pilih Teknisi</option>
-                            ${DAFTAR_TEKNISI.map(t => `<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-                        </select>
+                        ${isAktif ? `<select id="sel-tek-${l.id}" class="w-full border rounded p-1 text-[9px] font-bold"><option value="">Pilih</option>${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}</select>` : `<span class="font-black text-[9px]">${l.ditugaskan_ke}</span>`}
+                    </td>
+                    <td>
+                        ${isAktif ? `<input type="text" id="ket-${l.id}" placeholder="Isi hasil..." class="w-full p-2 border rounded text-[10px] outline-none">` : `<div class="text-[10px] font-bold italic text-emerald-700">${l.keterangan_admin || '-'}</div>`}
                     </td>
                     <td class="text-right">
-                        <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[9px] font-black px-4 py-2 rounded-xl shadow uppercase">Kirim WA</button>
+                        ${isAktif ? `
+                        <div class="flex gap-2 justify-end">
+                            <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[8px] font-black px-3 py-2 rounded-lg shadow uppercase">Kirim</button>
+                            <button onclick="prosesSelesai('${l.id}')" class="bg-emerald-600 text-white text-[8px] font-black px-3 py-2 rounded-lg shadow uppercase">Selesai</button>
+                        </div>` : `<span class="text-[9px] font-black text-slate-300 italic pr-4">TERSELESAIKAN</span>`}
                     </td>
                 </tr>`;
             });
@@ -142,24 +156,39 @@
             const l = MASTER_DATA.find(x => x.id == id);
             const tek = document.getElementById(`sel-tek-${id}`).value;
             const urg = document.getElementById(`sel-urg-${id}`).value;
-
-            if (!tek) return alert("Pilih Teknisi dulu!");
-
+            if (!tek) return alert("Pilih Teknisi!");
             try {
-                // 1. Update ke Supabase (Trigger WA Gateway)
-                const { error } = await db.from('laporan_perbaikan').update({ 
-                    ditugaskan_ke: tek, urgensi: urg, status: 'Proses', kirim_wa: true 
-                }).eq('id', id);
-
-                if (error) throw error;
-
-                // 2. Kirim Telegram
-                const msg = `🎯 *TUGAS BARU*%0APetugas: ${tek}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}`;
+                await db.from('laporan_perbaikan').update({ ditugaskan_ke: tek, urgensi: urg, status: 'Proses', kirim_wa: true }).eq('id', id);
+                const msg = `🎯 *TUGAS BARU*%0APetugas: ${tek}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}`;
                 fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-
-                alert("Berhasil Terkirim!");
-                muatData();
+                alert("Instruksi Dikirim!"); muatData();
             } catch (err) { alert("Gagal!"); }
+        }
+
+        async function prosesSelesai(id) {
+            const ket = document.getElementById(`ket-${id}`).value.trim();
+            if (!ket) return alert("Isi hasil perbaikan dulu!");
+            if (confirm("Selesaikan tugas ini?")) {
+                await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: new Date().toISOString() }).eq('id', id);
+                alert("Laporan Selesai!"); muatData();
+            }
+        }
+
+        function setMode(m) {
+            MODE_VIEW = m;
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-6 py-2 rounded-lg btn-active' : 'px-6 py-2 rounded-lg text-slate-400';
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-6 py-2 rounded-lg btn-active' : 'px-6 py-2 rounded-lg text-slate-400';
+            renderTable();
+        }
+
+        function exportKePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const list = MASTER_DATA.filter(d => d.status === 'Selesai');
+            const body = list.map((l, i) => [i+1, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin]);
+            doc.text("LAPORAN PERBAIKAN SELESAI - BPS", 14, 15);
+            doc.autoTable({ head: [['NO', 'ALAT', 'LOKASI', 'PELAPOR', 'TEKNISI', 'HASIL']], body: body, startY: 20 });
+            doc.save("Laporan_BPS.pdf");
         }
     </script>
 </body>
