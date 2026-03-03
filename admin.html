@@ -300,43 +300,50 @@
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
             doc.save(`IPSRS_${MODE_VIEW}.pdf`);
         }
-
 async function kirimTelegram(id) {
-    // 1. Cari data laporan di Master Data
+    // 1. Cari data di Master Data untuk keperluan teks
     const l = MASTER_DATA.find(x => x.id == id);
     
-    // 2. Ambil nilai terbaru dari dropdown (penting!)
-    const teknisiTerpilih = document.getElementById(`tek-${id}`).value;
-    const urgensiTerpilih = document.getElementById(`urg-${id}`).value;
+    // 2. Ambil nilai Teknisi & Urgensi dari inputan di tabel (Dropdown/Select)
+    // Kita cari elemen select yang ada di baris tersebut
+    const row = document.querySelector(`tr[data-id="${id}"]`) || document.activeElement.closest('tr');
+    const teknisiTerpilih = row.querySelector('select:nth-of-type(2)') ? row.querySelector('select:nth-of-type(2)').value : l.ditugaskan_ke;
+    const urgenTerpilih = row.querySelector('select:nth-of-type(1)') ? row.querySelector('select:nth-of-type(1)').value : (l.urgensi || "Biasa");
 
     if (!teknisiTerpilih) return alert("Pilih Teknisi dulu, Pak!");
 
-    // 3. Update Database Supabase (Ini yang memicu WA GATEWAY)
-    const { error: dbError } = await db.from('laporan_perbaikan')
-        .update({ 
-            ditugaskan_ke: teknisiTerpilih, 
-            urgensi: urgensiTerpilih,
-            kirim_wa: true // <--- PELATUK UNTUK WHATSAPP
-        })
-        .eq('id', id);
+    try {
+        // 3. UPDATE DATABASE (Ini yang memicu WA GATEWAY)
+        const { error: dbError } = await db.from('laporan_perbaikan')
+            .update({ 
+                ditugaskan_ke: teknisiTerpilih, 
+                urgensi: urgenTerpilih,
+                status: 'Proses',
+                kirim_wa: true  // <--- PELATUK UTAMA
+            })
+            .eq('id', id);
 
-    if (dbError) {
-        alert("Gagal update database: " + dbError.message);
-        return;
+        if (dbError) throw dbError;
+
+        // 4. KIRIM TELEGRAM
+        const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgenTerpilih}`;
+        
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
+
+        // 5. SELESAI
+        alert("✅ Instruksi Terkirim ke WA & Telegram!");
+        muatData(); // Refresh tampilan tabel admin
+
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan: " + err.message);
     }
-
-    // 4. Kirim ke Telegram (Bonus tetap jalan)
-    const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgensiTerpilih}`;
-    
-    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-
-    // 5. Beri tahu sukses
-    alert("Instruksi Terkirim ke WhatsApp & Telegram!");
-    muatData(); // Refresh tabel agar tampilan berubah
 }
+
     </script>
 </body>
 </html>
+
 
 
 
