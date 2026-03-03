@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard BPS - RS Baptis Batu</title>
+    <title>Admin BPS - RS Baptis Batu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,110 +11,123 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
-        body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; overflow: hidden; }
+        body, html { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f0f4f8; color: #1e293b; }
         .hidden { display: none !important; }
         
-        /* Judul Kolom */
-        th { font-size: 12px; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; padding: 16px 12px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; }
+        /* Table Header Modern */
+        th { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; padding: 18px 12px; background: #ffffff; border-bottom: 2px solid #e2e8f0; }
         
-        /* Isi Tabel - Semua Hitam & Tidak Miring */
-        td { font-size: 12px; font-weight: 600; padding: 14px 12px; border-bottom: 1px solid #e2e8f0; color: #000000 !important; font-style: normal !important; transition: all 0.2s; }
-        tr:hover td { background-color: #f1f5f9; }
+        /* Table Body - Teks Hitam & Tegas */
+        td { font-size: 13px; font-weight: 600; padding: 16px 12px; border-bottom: 1px solid #e2e8f0; color: #0f172a; transition: all 0.2s; }
+        tr:hover td { background-color: #f8fafc; color: #4f46e5; }
         
-        .glass-card { background: #ffffff; border: 1px solid #cbd5e1; }
+        /* Card & Shadow */
+        .glass-panel { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid #ffffff; }
         
-        .btn-active { background: #000000 !important; color: white !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+        /* Button Styles */
+        .btn-main { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(15, 23, 42, 0.2); }
+        .btn-active { background: #4f46e5 !important; color: white !important; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
         
+        /* Image Zoom Styling */
         #modal-foto-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9);
-            z-index: 200; backdrop-filter: blur(8px); cursor: zoom-out;
+            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9);
+            z-index: 200; backdrop-filter: blur(10px); cursor: zoom-out;
             align-items: center; justify-content: center;
         }
         #img-zoom { 
-            max-width: 50%; max-height: 80%; border-radius: 1rem; border: 6px solid #ffffff; 
+            max-width: 50%; max-height: 85%; border-radius: 24px; border: 8px solid rgba(255,255,255,0.1); 
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
         }
 
-        /* Status Badges */
-        .badge-urgensi { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; font-style: normal; }
-        .urg-darurat { background: #ef4444; color: #ffffff; }
-        .urg-segera { background: #f97316; color: #ffffff; }
-        .urg-biasa { background: #22c55e; color: #ffffff; }
+        /* Urgency Labels */
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .badge-red { background: #fee2e2; color: #ef4444; }
+        .badge-orange { background: #ffedd5; color: #f97316; }
+        .badge-green { background: #dcfce7; color: #22c55e; }
     </style>
 </head>
-<body>
+<body class="overflow-hidden">
 
     <div id="modal-foto-overlay" onclick="this.style.display='none'">
-        <img id="img-zoom" src="">
+        <img id="img-zoom" src="" class="transition-all duration-500">
     </div>
 
-    <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-950 z-[100]">
-        <div class="bg-white p-12 rounded-[2rem] shadow-2xl w-full max-w-md text-center border-4 border-black">
-            <h2 class="text-3xl font-black text-black tracking-tight mb-2 uppercase">ADMIN <span class="text-indigo-600">BPS</span></h2>
-            <p class="text-black font-bold text-sm mb-8 uppercase tracking-widest">RS BAPTIS BATU</p>
+    <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-[100]">
+        <div class="bg-white p-12 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center border border-slate-100">
+            <div class="mb-8">
+                <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">ADMIN BPS</h2>
+                <p class="text-slate-400 font-medium text-sm mt-1 uppercase tracking-widest">RS BAPTIS BATU</p>
+            </div>
             <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full px-6 py-4 bg-slate-100 rounded-xl outline-none border-2 border-transparent focus:border-black font-bold text-black text-center">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full px-6 py-4 bg-slate-100 rounded-xl outline-none border-2 border-transparent focus:border-black font-bold text-black text-center">
-                <button onclick="cekLogin()" class="w-full bg-black text-white font-black py-5 rounded-xl uppercase tracking-wider hover:bg-slate-800 shadow-xl transition-all active:scale-95 mt-4 text-sm">Masuk Sistem</button>
+                <input type="text" id="user-input" placeholder="Username" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none border-2 border-transparent focus:border-indigo-500 font-bold transition-all text-center">
+                <input type="password" id="pass-input" placeholder="Password" class="w-full px-6 py-4 bg-slate-50 rounded-2xl outline-none border-2 border-transparent focus:border-indigo-500 font-bold transition-all text-center">
+                <button onclick="cekLogin()" class="w-full btn-main font-bold py-5 rounded-2xl uppercase tracking-wider shadow-xl mt-4">Akses Dashboard</button>
             </div>
         </div>
     </div>
 
     <div id="admin-dashboard" class="hidden flex flex-col h-screen">
-        <header class="bg-white px-8 py-5 flex justify-between items-center border-b-2 border-black">
-            <h1 class="font-black text-sm tracking-tighter uppercase text-black">🛠️ SISTEM BPS <span class="text-indigo-600">BAPTIS BATU</span></h1>
-            <div class="flex gap-3">
-                <button onclick="exportKePDF()" class="bg-rose-600 text-white px-6 py-2.5 rounded-xl text-[11px] font-black uppercase shadow-md hover:bg-rose-700">Cetak Laporan</button>
-                <button onclick="location.reload()" class="text-[11px] font-black text-black border-2 border-black px-6 py-2.5 rounded-xl uppercase hover:bg-slate-100">Keluar</button>
+        <header class="bg-white px-8 py-5 flex justify-between items-center border-b border-slate-200 shadow-sm z-10">
+            <div class="flex items-center gap-4">
+                <div class="px-3 py-1.5 bg-indigo-600 rounded-lg text-white font-black text-xs">BPS</div>
+                <h1 class="font-extrabold text-sm tracking-tight text-slate-800 uppercase">Sistem Monitoring <span class="text-indigo-600">RS Baptis Batu</span></h1>
+            </div>
+            <div class="flex gap-4 items-center">
+                <button onclick="exportKePDF()" class="bg-white border-2 border-slate-100 text-slate-700 px-6 py-2.5 rounded-xl text-xs font-extrabold uppercase hover:border-indigo-200 transition-all">Cetak Laporan</button>
+                <button onclick="location.reload()" class="text-[11px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-700">Logout</button>
             </div>
         </header>
 
-        <section class="px-8 py-6 flex flex-wrap gap-4 justify-between items-center bg-white border-b">
-            <div class="flex bg-slate-100 p-1.5 rounded-xl border-2 border-black font-black text-[11px]">
-                <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-8 py-2.5 rounded-lg transition-all btn-active">LAPORAN AKTIF</button>
-                <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-8 py-2.5 rounded-lg text-black transition-all">RIWAYAT SELESAI</button>
-            </div>
-
-            <div class="flex gap-3 items-center bg-white px-4 py-2 rounded-xl border-2 border-black">
-                <label class="text-[10px] font-black text-black uppercase">Filter Tanggal:</label>
-                <input type="date" id="tgl-mulai" class="text-[12px] font-black outline-none text-black">
-                <span class="text-black font-black">S/D</span>
-                <input type="date" id="tgl-akhir" class="text-[12px] font-black outline-none text-black">
-                <button onclick="muatData()" class="bg-black text-white p-2 rounded-lg hover:bg-slate-800 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </button>
+        <section class="px-8 py-6 flex flex-wrap gap-6 justify-between items-center bg-[#f8fafc]">
+            <div class="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 font-bold text-[11px]">
+                <button onclick="setMode('Aktif')" id="btn-mode-aktif" class="px-8 py-3 rounded-xl transition-all btn-active">ANTRIAN AKTIF</button>
+                <button onclick="setMode('Selesai')" id="btn-mode-selesai" class="px-8 py-3 rounded-xl text-slate-400 transition-all hover:text-slate-600">RIWAYAT TUGAS</button>
             </div>
 
             <div class="flex items-center gap-4">
-                <button onclick="manualRefresh()" class="bg-white px-5 py-2.5 rounded-xl border-2 border-black shadow-sm flex items-center gap-3 hover:bg-slate-50 active:scale-95">
-                    <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span id="timer-label" class="text-[12px] font-black text-black">30s</span>
-                    <span class="text-[11px] font-black text-black uppercase">REFRESH</span>
+                <div class="flex gap-3 items-center bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-slate-200">
+                    <span class="text-[10px] font-black text-slate-400 uppercase">Periode:</span>
+                    <input type="date" id="tgl-mulai" class="text-xs font-bold outline-none text-slate-700">
+                    <span class="text-slate-300">/</span>
+                    <input type="date" id="tgl-akhir" class="text-xs font-bold outline-none text-slate-700">
+                    <button onclick="muatData()" class="text-indigo-600 hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </button>
+                </div>
+                
+                <button onclick="manualRefresh()" class="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-3 active:scale-95 transition-all">
+                    <span id="timer-label" class="text-xs font-black text-indigo-600">30s</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Sync</span>
                 </button>
-                <div class="bg-black px-6 py-2 rounded-xl shadow-lg flex items-center gap-4">
-                    <p class="text-[10px] font-bold text-white uppercase leading-none text-center">Total<br>Data</p>
+
+                <div class="bg-slate-900 px-6 py-2.5 rounded-2xl shadow-lg flex items-center gap-4 border border-slate-700">
                     <span id="stat-count" class="text-2xl font-black text-white">0</span>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase leading-none">Total<br>Data</p>
                 </div>
             </div>
         </section>
 
-        <main class="flex-grow overflow-auto p-8 pt-2">
-            <div class="bg-white rounded-xl shadow-xl border-2 border-black overflow-hidden min-w-[1300px]">
+        <main class="flex-grow overflow-auto p-8 pt-0">
+            <div class="glass-panel overflow-hidden min-w-[1300px]">
                 <table class="w-full text-left">
                     <thead>
                         <tr>
-                            <th class="w-20 text-center">FOTO</th>
-                            <th class="w-24">TGL MASUK</th>
-                            <th class="w-44">ALAT & LOKASI</th>
-                            <th class="w-24">PELAPOR</th>
-                            <th class="w-48">DETAIL MASALAH</th>
-                            <th class="w-24 text-center">URGENSI</th>
-                            <th class="w-32 text-center">TEKNISI</th>
-                            <th class="w-40 text-center">DURASI / HASIL</th>
-                            <th class="w-32 text-right pr-10">AKSI</th>
+                            <th class="w-20 text-center">Foto</th>
+                            <th class="w-28">Tgl Masuk</th>
+                            <th class="w-44">Alat & Lokasi</th>
+                            <th class="w-28">Pelapor</th>
+                            <th class="w-48">Detail Masalah</th>
+                            <th class="w-28 text-center">Urgensi</th>
+                            <th class="w-36 text-center">Teknisi</th>
+                            <th class="w-40 text-center">Durasi / Hasil</th>
+                            <th class="w-32 text-right pr-10">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-laporan"></tbody>
+                    <tbody id="tabel-laporan" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
         </main>
@@ -132,9 +145,7 @@
         window.onload = () => { db = supabase.createClient(SB_URL, SB_KEY); };
 
         function cekLogin() {
-            const u = document.getElementById('user-input').value;
-            const p = document.getElementById('pass-input').value;
-            if (u === "admin" && p === "admin123") {
+            if (document.getElementById('user-input').value === "admin" && document.getElementById('pass-input').value === "admin123") {
                 document.getElementById('login-panel').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
                 muatData(); mulaiTimer();
@@ -169,9 +180,7 @@
         function hitungDurasi(awal, akhir) {
             if(!awal || !akhir) return "-";
             const diff = new Date(akhir) - new Date(awal);
-            const jam = Math.floor(diff / 3600000);
-            const mnt = Math.floor((diff % 3600000) / 60000);
-            return `${jam}J ${mnt}M`;
+            return Math.floor(diff / 3600000) + "J " + Math.floor((diff % 3600000) / 60000) + "M";
         }
 
         function renderTable() {
@@ -185,49 +194,49 @@
                 const t1 = new Date(l.created_at).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}).toUpperCase();
                 const isAktif = MODE_VIEW === 'Aktif';
                 const fotoUrl = `${SB_URL}/storage/v1/object/public/foto_alat/${l.foto_url}`;
-                const urgClass = l.urgensi === 'Darurat' ? 'urg-darurat' : (l.urgensi === 'Segera' ? 'urg-segera' : 'urg-biasa');
+                const urgBadge = l.urgensi === 'Darurat' ? 'badge-red' : (l.urgensi === 'Segera' ? 'badge-orange' : 'badge-green');
                 
                 tbody.innerHTML += `
                 <tr>
                     <td class="text-center">
-                        <img src="${fotoUrl}" onclick="zoomFoto('${fotoUrl}')" class="w-12 h-12 rounded-lg object-cover cursor-zoom-in border-2 border-black hover:scale-110 transition-transform" onerror="this.src='https://placehold.co/100?text=No+Foto'">
+                        <img src="${fotoUrl}" onclick="zoomFoto('${fotoUrl}')" class="w-12 h-12 rounded-xl object-cover cursor-zoom-in border border-slate-200 shadow-sm hover:scale-110 transition-transform" onerror="this.src='https://placehold.co/100?text=FOTO'">
                     </td>
-                    <td class="font-bold">${t1}</td>
+                    <td class="font-bold text-slate-400 text-[11px]">${t1}</td>
                     <td>
-                        <div class="font-black text-sm uppercase">${l.nama_alat}</div>
-                        <div class="text-[10px] font-black text-indigo-700 uppercase">LOKASI: ${l.lokasi}</div>
+                        <div class="font-bold text-slate-900 text-sm uppercase">${l.nama_alat}</div>
+                        <div class="text-[10px] text-indigo-600 font-extrabold uppercase mt-0.5">📍 ${l.lokasi}</div>
                     </td>
-                    <td class="font-black uppercase">${l.nama_pelapor || '-'}</td>
-                    <td class="font-bold pr-4 uppercase text-slate-800">${l.isi_laporan}</td>
+                    <td class="font-bold text-slate-700 uppercase">${l.nama_pelapor || '-'}</td>
+                    <td class="font-medium text-slate-600 pr-4 uppercase text-[12px]">${l.isi_laporan}</td>
                     <td class="text-center">
                         ${isAktif ? `
-                        <select id="sel-urg-${l.id}" class="w-full border-2 border-black bg-white rounded p-1 text-[11px] font-black">
+                        <select id="sel-urg-${l.id}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[10px] font-black outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="Biasa" ${l.urgensi==='Biasa'?'selected':''}>BIASA</option>
                             <option value="Segera" ${l.urgensi==='Segera'?'selected':''}>SEGERA</option>
                             <option value="Darurat" ${l.urgensi==='Darurat'?'selected':''}>DARURAT</option>
-                        </select>` : `<span class="badge-urgensi ${urgClass}">${l.urgensi}</span>`}
+                        </select>` : `<span class="badge ${urgBadge}">${l.urgensi}</span>`}
                     </td>
                     <td>
                         ${isAktif ? `
-                        <select id="sel-tek-${l.id}" class="w-full border-2 border-black bg-white rounded p-1 text-[11px] font-black">
+                        <select id="sel-tek-${l.id}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[10px] font-black outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="">PILIH</option>
                             ${DAFTAR_TEKNISI.map(t=>`<option value="${t}" ${l.ditugaskan_ke===t?'selected':''}>${t}</option>`).join('')}
-                        </select>` : `<span class="font-black text-[12px] block text-center uppercase tracking-tighter">${l.ditugaskan_ke}</span>`}
+                        </select>` : `<span class="font-bold text-slate-900 block text-center uppercase tracking-tight">${l.ditugaskan_ke}</span>`}
                     </td>
                     <td>
                         ${isAktif ? `
-                        <input type="text" id="ket-${l.id}" placeholder="Hasil..." class="w-full p-2 border-2 border-black rounded text-[11px] font-black uppercase outline-none focus:bg-yellow-50">` : `
+                        <input type="text" id="ket-${l.id}" placeholder="Hasil perbaikan..." class="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold uppercase outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500">` : `
                         <div class="text-center">
-                            <div class="font-black text-rose-600 text-[12px]">DURASI: ${hitungDurasi(l.created_at, l.tanggal_selesai)}</div>
-                            <div class="text-[10px] font-black uppercase text-black truncate">${l.keterangan_admin || '-'}</div>
+                            <div class="font-black text-indigo-600 text-[12px] mb-0.5">${hitungDurasi(l.created_at, l.tanggal_selesai)}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase truncate">${l.keterangan_admin || '-'}</div>
                         </div>`}
                     </td>
-                    <td class="text-right pr-4">
+                    <td class="text-right pr-6">
                         ${isAktif ? `
                         <div class="flex gap-2 justify-end">
-                            <button onclick="kirimTelegram('${l.id}')" class="bg-indigo-600 text-white text-[10px] font-black px-4 py-2.5 rounded-lg border-2 border-black shadow uppercase active:translate-y-1 transition-all">WA</button>
-                            <button onclick="prosesSelesai('${l.id}')" class="bg-emerald-600 text-white text-[10px] font-black px-4 py-2.5 rounded-lg border-2 border-black shadow uppercase active:translate-y-1 transition-all">Selesai</button>
-                        </div>` : `<div class="bg-black text-white text-[10px] font-black py-2 rounded-lg text-center uppercase">TERARSIP</div>`}
+                            <button onclick="kirimTelegram('${l.id}')" class="bg-sky-500 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-lg shadow-sky-100 uppercase hover:bg-sky-600 transition-all">WA</button>
+                            <button onclick="prosesSelesai('${l.id}')" class="bg-emerald-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-lg shadow-emerald-100 uppercase hover:bg-emerald-700 transition-all">OK</button>
+                        </div>` : `<div class="bg-slate-50 text-slate-300 text-[9px] font-bold py-2 rounded-lg text-center uppercase tracking-widest border border-slate-100">Closed</div>`}
                     </td>
                 </tr>`;
             });
@@ -242,7 +251,7 @@
                 await db.from('laporan_perbaikan').update({ ditugaskan_ke: tek, urgensi: urg, status: 'Proses', kirim_wa: true }).eq('id', id);
                 const msg = `🎯 *TUGAS BARU*%0APetugas: ${tek}%0AAlat: ${l.nama_alat}%0ALokasi: ${l.lokasi}%0AMasalah: ${l.isi_laporan}`;
                 fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-                alert("Pesan Terkirim!"); muatData();
+                alert("Instruksi Terkirim!"); muatData();
             } catch (err) { alert("Gagal!"); }
         }
 
@@ -251,14 +260,14 @@
             if (!ket) return alert("Isi hasil perbaikan!");
             if (confirm("Selesaikan laporan ini?")) {
                 await db.from('laporan_perbaikan').update({ status: 'Selesai', keterangan_admin: ket, tanggal_selesai: new Date().toISOString() }).eq('id', id);
-                alert("Tugas Selesai!"); muatData();
+                alert("Laporan Ditutup!"); muatData();
             }
         }
 
         function setMode(m) {
             MODE_VIEW = m;
-            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-8 py-2.5 rounded-lg transition-all btn-active' : 'px-8 py-2.5 rounded-lg text-black transition-all font-black';
-            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-8 py-2.5 rounded-lg transition-all btn-active' : 'px-8 py-2.5 rounded-lg text-black transition-all font-black';
+            document.getElementById('btn-mode-aktif').className = m === 'Aktif' ? 'px-8 py-3 rounded-xl transition-all btn-active' : 'px-8 py-3 rounded-xl text-slate-400 font-bold';
+            document.getElementById('btn-mode-selesai').className = m === 'Selesai' ? 'px-8 py-3 rounded-xl transition-all btn-active' : 'px-8 py-3 rounded-xl text-slate-400 font-bold';
             renderTable();
         }
 
@@ -266,28 +275,29 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
             const list = MASTER_DATA.filter(d => MODE_VIEW === 'Aktif' ? d.status !== 'Selesai' : d.status === 'Selesai');
-            const judul = MODE_VIEW === 'Aktif' ? "DAFTAR ANTRIAN PERBAIKAN BPS" : "REKAP RIWAYAT SELESAI BPS";
+            const judul = (MODE_VIEW === 'Aktif' ? "ANTRIAN PERBAIKAN BPS" : "RIWAYAT SELESAI BPS").toUpperCase();
             
             const body = list.map((l, i) => [
                 i + 1, 
                 new Date(l.created_at).toLocaleDateString('id-ID'), 
                 l.nama_alat.toUpperCase(), 
                 l.lokasi.toUpperCase(), 
-                l.nama_pelapor.toUpperCase(),
+                l.nama_pelapor,
                 l.ditugaskan_ke || '-', 
-                MODE_VIEW === 'Aktif' ? l.isi_laporan.toUpperCase() : l.keterangan_admin.toUpperCase()
+                MODE_VIEW === 'Aktif' ? l.isi_laporan : l.keterangan_admin
             ]);
 
-            doc.setFontSize(14); doc.text(judul, 14, 15);
+            doc.setFontSize(14);
+            doc.text(judul, 14, 15);
             doc.autoTable({ 
-                head: [['NO', 'TANGGAL', 'ALAT', 'LOKASI', 'PELAPOR', 'TEKNISI', MODE_VIEW === 'Aktif' ? 'MASALAH' : 'HASIL']], 
+                head: [['NO', 'TANGGAL', 'ALAT', 'LOKASI', 'PELAPOR', 'TEKNISI', 'MASALAH/HASIL']], 
                 body: body, 
-                startY: 25,
+                startY: 22,
                 theme: 'grid',
-                styles: { fontSize: 8, fontStyle: 'bold', textColor: [0,0,0] },
-                headStyles: { fillColor: [0, 0, 0] }
+                headStyles: { fillColor: [79, 70, 229] },
+                styles: { fontSize: 8, fontStyle: 'bold' }
             });
-            doc.save(`Laporan_BPS_${MODE_VIEW}.pdf`);
+            doc.save(`BPS_${MODE_VIEW}.pdf`);
         }
     </script>
 </body>
