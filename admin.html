@@ -301,17 +301,43 @@
             doc.save(`IPSRS_${MODE_VIEW}.pdf`);
         }
 
-        function kirimTelegram(id) {
-            const l = MASTER_DATA.find(x => x.id == id);
-            if (!l.ditugaskan_ke) return alert("Pilih Teknisi!");
-            const urgen = l.urgensi || "Biasa";
-            const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${l.ditugaskan_ke}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgen}`;
-            fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
-            alert("Instruksi Terkirim!");
-        }
+async function kirimTelegram(id) {
+    // 1. Cari data laporan di Master Data
+    const l = MASTER_DATA.find(x => x.id == id);
+    
+    // 2. Ambil nilai terbaru dari dropdown (penting!)
+    const teknisiTerpilih = document.getElementById(`tek-${id}`).value;
+    const urgensiTerpilih = document.getElementById(`urg-${id}`).value;
+
+    if (!teknisiTerpilih) return alert("Pilih Teknisi dulu, Pak!");
+
+    // 3. Update Database Supabase (Ini yang memicu WA GATEWAY)
+    const { error: dbError } = await db.from('laporan_perbaikan')
+        .update({ 
+            ditugaskan_ke: teknisiTerpilih, 
+            urgensi: urgensiTerpilih,
+            kirim_wa: true // <--- PELATUK UNTUK WHATSAPP
+        })
+        .eq('id', id);
+
+    if (dbError) {
+        alert("Gagal update database: " + dbError.message);
+        return;
+    }
+
+    // 4. Kirim ke Telegram (Bonus tetap jalan)
+    const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgensiTerpilih}`;
+    
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
+
+    // 5. Beri tahu sukses
+    alert("Instruksi Terkirim ke WhatsApp & Telegram!");
+    muatData(); // Refresh tabel agar tampilan berubah
+}
     </script>
 </body>
 </html>
+
 
 
 
