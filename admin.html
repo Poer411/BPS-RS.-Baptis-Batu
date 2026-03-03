@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard IPSRS - RS Baptis Batu</title>
+    <title>Admin Dashboard BPS - RS Baptis Batu</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -44,7 +44,7 @@
 
     <div id="login-panel" class="fixed inset-0 flex items-center justify-center bg-slate-900 z-[100]">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-4 border-indigo-600">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">IPSRS</span></h2>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-2">ADMIN <span class="text-indigo-600">BPS</span></h2>
             <p class="text-[9px] font-bold text-slate-400 mb-8 uppercase tracking-widest">RS BAPTIS BATU</p>
             <div class="space-y-4">
                 <input type="text" id="user-input" placeholder="Username" class="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold text-center border-2 focus:border-indigo-600">
@@ -56,7 +56,7 @@
 
     <div id="admin-dashboard" class="app-container hidden">
         <header class="header-fixed px-6 py-3 flex justify-between items-center shadow-sm">
-            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ IPSRS <span class="text-indigo-600">BAPTIS BATU</span></h1>
+            <h1 class="font-black text-slate-900 text-xs italic uppercase">🛠️ BPS <span class="text-indigo-600">BAPTIS BATU</span></h1>
             <div class="flex gap-2">
                 <button onclick="exportKePDF()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-all">Export PDF</button>
                 <button onclick="location.reload()" class="text-[10px] font-black text-slate-400 border px-5 py-2.5 rounded-xl uppercase hover:bg-slate-50">Log Out</button>
@@ -114,7 +114,7 @@
         let db;
         let MASTER_DATA = [];
         let MODE_VIEW = 'Aktif';
-        let countdown = 30;
+        let countdown = 60;
 
         function cekLogin() {
             const u = document.getElementById('user-input').value;
@@ -296,9 +296,9 @@
                 const dur = hitungDurasi(l.created_at, l.tanggal_selesai);
                 return MODE_VIEW === 'Aktif' ? [i+1, t1, l.nama_alat, l.lokasi, l.nama_pelapor, l.isi_laporan, l.ditugaskan_ke] : [i+1, t1, t2, dur, l.nama_alat, l.lokasi, l.nama_pelapor, l.ditugaskan_ke, l.keterangan_admin];
             });
-            doc.text(`LAPORAN IPSRS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
+            doc.text(`LAPORAN BPS - ${MODE_VIEW.toUpperCase()}`, 14, 15);
             doc.autoTable({ startY: 20, head: h, body: b, theme: 'grid', styles: { fontSize: 7 } });
-            doc.save(`IPSRS_${MODE_VIEW}.pdf`);
+            doc.save(`BPS_${MODE_VIEW}.pdf`);
         }
 
 async function kirimTelegram(id) {
@@ -325,7 +325,7 @@ async function kirimTelegram(id) {
         if (dbError) throw dbError;
 
         // 4. KIRIM KE TELEGRAM (Opsional tetap jalan)
-        const msg = `🎯 *TUGAS BARU IPSRS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgenTerpilih}`;
+        const msg = `🎯 *TUGAS BARU BPS*%0A━━━━━━━━━━━━━━%0A👤 *Petugas:* ${teknisiTerpilih}%0A⚙️ *Alat:* ${l.nama_alat}%0A📍 *Lokasi:* ${l.lokasi}%0A📝 *Masalah:* ${l.isi_laporan}%0A👤 *Pelapor:* ${l.nama_pelapor}%0A⚠️ *Urgensi:* ${urgenTerpilih}`;
         
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${msg}&parse_mode=Markdown`);
 
@@ -342,6 +342,7 @@ async function kirimTelegram(id) {
     </script>
 </body>
 </html>
+
 
 
 
