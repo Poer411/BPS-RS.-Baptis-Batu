@@ -3,47 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BPS - WA Gateway (Anti-Sleep PRO)</title>
+    <title>BPS - WA Gateway</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { background: #020617; color: #94a3b8; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
-        .log-container { background: rgba(15, 23, 42, 0.9); border: 1px solid #1e293b; height: 500px; overflow-y: auto; }
-        .status-ready { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-        .heartbeat { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .log-area { background: #020617; border: 1px solid #1e293b; height: 450px; overflow-y: auto; font-size: 12px; }
+        .tag-success { color: #10b981; }
+        .tag-info { color: #38bdf8; }
+        .tag-ref { color: #a855f7; font-weight: bold; }
     </style>
 </head>
 <body class="p-10">
-    <div class="max-w-3xl mx-auto">
-        <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
-            <div>
-                <h1 class="text-2xl font-black text-white tracking-tighter">BPS GATEWAY <span class="text-indigo-500">PRO</span></h1>
-                <p class="text-[10px] uppercase tracking-widest text-slate-500">Status: <span id="status-text" class="status-ready">🟢 MONITORING</span></p>
-            </div>
-            <div class="text-right">
-                <div id="clock" class="text-xl font-bold text-white">00:00:00</div>
-                <div id="refresh-notice" class="text-[9px] text-indigo-400 font-bold uppercase tracking-tighter animate-pulse">Mode: Jam Kerja (Refresh 1m)</div>
-            </div>
+    <div class="max-w-2xl mx-auto bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-800">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-black uppercase tracking-tighter">📡 BPS WA GATEWAY</h1>
+            <div id="timer-display" class="text-[10px] bg-slate-800 px-3 py-1 rounded-full text-slate-400 font-bold">MODE: MONITORING</div>
+        </div>
+        
+        <div id="log" class="log-area p-4 rounded-xl space-y-2 mb-4">
+            <p class="text-slate-500 italic">Inisialisasi sistem...</p>
         </div>
 
-        <div id="log-box" class="log-container rounded-2xl p-6 shadow-2xl text-[12px] space-y-1">
-            <div class="text-emerald-500 font-bold border-l-2 border-emerald-500 pl-3">[SYSTEM] Anti-Sleep Engine v2.1 Ready.</div>
-        </div>
-
-        <div class="mt-6 flex items-center justify-center gap-4 border-t border-slate-800 pt-6">
-            <div class="w-2 h-2 bg-indigo-500 rounded-full heartbeat"></div>
-            <div class="w-2 h-2 bg-indigo-500 rounded-full heartbeat" style="animation-delay: 0.5s"></div>
-            <div class="w-2 h-2 bg-indigo-500 rounded-full heartbeat" style="animation-delay: 1s"></div>
-            <span class="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-500">Service Operational (08.00 - 16.00)</span>
+        <div class="text-[10px] text-slate-500 text-center font-bold uppercase tracking-widest">
+            Otomatis Refresh Setiap 1 Menit (08:00 - 16:00)
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
-        
+        // === DAFTAR NOMOR WA TEKNISI ===
         const DAFTAR_WA = {
             "DIDIT": "6281234567890",
             "SUSANTO": "6281234567891",
@@ -54,21 +42,27 @@
             "TWIN": "6281234567896"
         };
 
+        const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
+        
         let supabaseClient;
 
-        function writeLog(msg, color = "text-slate-400") {
-            const box = document.getElementById('log-box');
-            const time = new Date().toLocaleTimeString('id-ID');
-            box.innerHTML += `<div class="${color} border-l-2 border-slate-800 pl-3 mb-1">[${time}] ${msg}</div>`;
-            box.scrollTop = box.scrollHeight;
+        function addLog(msg, type = "info") {
+            const log = document.getElementById('log');
+            let color = "tag-info";
+            if (type === "success") color = "tag-success";
+            if (type === "refresh") color = "tag-ref";
+            
+            log.innerHTML += `<p class="${color}">[${new Date().toLocaleTimeString()}] ${msg}</p>`;
+            log.scrollTop = log.scrollHeight;
         }
 
         async function init() {
             supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-            writeLog("Koneksi Database Stabil.", "text-emerald-400");
+            addLog("Database Terhubung. Menunggu instruksi...", "success");
 
             supabaseClient
-                .channel('anti_sleep_channel')
+                .channel('wa_notify')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'laporan_perbaikan' }, (payload) => {
                     const d = payload.new;
                     if (d.status === 'Proses' && d.kirim_wa === true) {
@@ -79,45 +73,45 @@
         }
 
         async function prosesKirim(data) {
-            const nomor = DAFTAR_WA[data.ditugaskan_ke];
+            const nama = data.ditugaskan_ke;
+            const nomor = DAFTAR_WA[nama];
+
             if (!nomor) {
-                writeLog(`⚠️ Nomor teknisi tidak ditemukan!`, "text-rose-500");
+                addLog(`⚠️ Nomor untuk ${nama} tidak ditemukan!`, "error");
                 return;
             }
 
-            writeLog(`🚀 Mengirim tugas ke ${data.ditugaskan_ke}...`, "text-yellow-400 font-bold");
-            const pesan = `*NOTIFIKASI PERBAIKAN BPS*%0A👤 *Teknisi:* ${data.ditugaskan_ke}%0A🛠️ *Alat:* ${data.nama_alat}%0A📍 *Lokasi:* ${data.lokasi}%0A⚠️ *Masalah:* ${data.isi_laporan}`;
+            addLog(`Mengirim instruksi ke ${nama}...`);
+
+            const pesan = `*NOTIFIKASI TUGAS BPS*%0A👤 *Teknisi:* ${nama}%0A🛠️ *Alat:* ${data.nama_alat}%0A📍 *Lokasi:* ${data.lokasi}%0A⚠️ *Masalah:* ${data.isi_laporan}`;
             const url = `https://api.whatsapp.com/send?phone=${nomor}&text=${pesan}`;
             
+            // Buka WhatsApp
             window.open(url, '_blank');
 
+            // Update DB
             await supabaseClient.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
-            writeLog(`✅ Selesai memproses ${data.ditugaskan_ke}`, "text-emerald-400");
+            addLog(`✅ WhatsApp ${nama} terbuka.`, "success");
         }
 
-        // --- LOGIKA JAM KERJA & REFRESH OTOMATIS ---
+        // === FITUR REFRESH OTOMATIS (08:00 - 16:00) ===
         setInterval(() => {
             const sekarang = new Date();
             const jam = sekarang.getHours();
-            const menit = sekarang.getMinutes();
             const detik = sekarang.getSeconds();
 
-            // Update Jam di Layar
-            document.getElementById('clock').innerText = sekarang.toLocaleTimeString('id-ID');
-
-            // Cek apakah Jam Kerja (08.00 - 15.59)
+            // Cek jika jam kerja
             if (jam >= 8 && jam < 16) {
-                document.getElementById('refresh-notice').innerText = "Mode: Jam Kerja (Refresh 1m)";
-                document.getElementById('refresh-notice').className = "text-[9px] text-emerald-400 font-bold uppercase tracking-tighter animate-pulse";
-                
-                // Refresh setiap menit tepat pada detik ke-0
+                document.getElementById('timer-display').innerText = "MODE: REFRESH AKTIF (1m)";
+                document.getElementById('timer-display').classList.add('text-emerald-400');
+
+                // Refresh tepat di detik ke-0 setiap menit
                 if (detik === 0) {
-                    writeLog("System Auto-Refresh (Scheduled)...", "text-indigo-400");
-                    setTimeout(() => location.reload(), 500);
+                    addLog("Melakukan Refresh Rutin...", "refresh");
+                    setTimeout(() => { location.reload(); }, 500);
                 }
             } else {
-                document.getElementById('refresh-notice').innerText = "Mode: Luar Jam Kerja (Idle)";
-                document.getElementById('refresh-notice').className = "text-[9px] text-slate-500 font-bold uppercase tracking-tighter";
+                document.getElementById('timer-display').innerText = "MODE: STANDBY (LUAR JAM KERJA)";
             }
         }, 1000);
 
