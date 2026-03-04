@@ -2,119 +2,127 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>BPS WA GATEWAY - DUAL SENDING MODE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA Gateway - BPS System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #075e54; color: white; display: flex; flex-direction: column; align-items: center; padding: 50px; margin: 0; }
-        .card { background: white; color: #333; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); width: 100%; max-width: 480px; text-align: center; }
-        h2 { margin: 0; color: #075e54; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        #status { font-weight: bold; color: #e67e22; margin: 15px 0; font-size: 1.1em; }
-        .log-box { width: 100%; height: 380px; background: #1e1e1e; color: #32cd32; margin-top: 20px; border-radius: 10px; overflow-y: auto; text-align: left; padding: 15px; font-size: 12px; font-family: 'Courier New', Courier, monospace; box-sizing: border-box; line-height: 1.6; }
-        .highlight { color: #f1c40f; font-weight: bold; }
-        .success { color: #00ff00; }
-        .info { color: #00bfff; }
+        body { background: #0f172a; color: #38bdf8; font-family: 'Courier New', Courier, monospace; }
+        .log-box { background: rgba(0,0,0,0.5); border: 1px solid #1e293b; height: 400px; overflow-y: auto; }
+        .status-on { color: #4ade80; text-shadow: 0 0 10px #4ade80; }
+        .status-off { color: #f87171; }
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
     </style>
 </head>
-<body>
+<body class="p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-bold uppercase tracking-tighter">📡 BPS WA GATEWAY</h1>
+            <div id="status-badge" class="status-off font-black blink uppercase text-sm">-- Menghubungkan --</div>
+        </div>
 
-    <div class="card">
-        <h2>WA GATEWAY BPS</h2>
-        <div id="status">Menghubungkan ke Database...</div>
-        <div class="log-box" id="logs">-- Sistem Dimulai --</div>
-        <div style="margin-top:15px; font-size: 0.8em; color: #777;">Status: Dual-Sending Active (Japri + Grup)</div>
+        <div id="log" class="log-box p-4 rounded-xl text-xs space-y-1">
+            <p class="text-slate-500">[SYSTEM] Memulai inisialisasi...</p>
+        </div>
+
+        <div class="mt-4 text-[10px] text-slate-500 uppercase tracking-widest text-center">
+            Biarkan tab ini tetap terbuka untuk meneruskan notifikasi
+        </div>
     </div>
 
     <script>
-        // --- KONFIGURASI ---
         const SB_URL = "https://hcqyfhndihjpuihjzusx.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjcXlmaG5kaWhqcHVpaGp6dXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODg5NjcsImV4cCI6MjA4NzI2NDk2N30.VXLRImVayxj4-Lcas5wX5lkuTXqmp7z74Up2SuRMUnM";
-        const FONNTE_TOKEN = "xJ5FQgtfzyQ1XDhgVjun";
-        const ID_GRUP_IPSRS = "6285100332530-1501643366@g.us"; 
+        
+        let supabaseClient;
+        let retryCount = 0;
 
-        const daftarTeknisi = {
-            "DIDIT": "6281331755209",
-            "SUSANTO": "6289668467140",
-            "LUCIA": "6285708203992",
-            "ROKIM": "6285806690875",
-            "BAMBANG": "628980506696",
-            "PURNOMO": "6285100332530",
-            "TWIN": "6285646405019"
-        };
-
-        const db = supabase.createClient(SB_URL, SB_KEY);
-
-        // Realtime Listener
-        const channel = db.channel('wa_trigger')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'laporan_perbaikan' }, (payload) => {
-                if (payload.new.kirim_wa === true) {
-                    mainProcess(payload.new);
-                }
-            })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    document.getElementById('status').innerText = "● MONITORING AKTIF (READY)";
-                    document.getElementById('status').style.color = "#25d366";
-                    updateLog("<span class='info'>✅ Terhubung! Menunggu instruksi Admin...</span>");
-                }
-            });
-
-        async function mainProcess(data) {
-            const namaPilihan = data.ditugaskan_ke ? data.ditugaskan_ke.toUpperCase() : "PETUGAS";
-            const nomorTeknisi = daftarTeknisi[namaPilihan] || "6285100332530"; 
-            
-            const pesan = `🎯 *TUGAS BARU BPS*\n\n👤 *Teknisi:* ${namaPilihan}\n⚙️ *Alat:* ${data.nama_alat || "-"}\n📍 *Lokasi:* ${data.lokasi || "-"}\n📝 *Masalah:* ${data.isi_laporan || "-"}\n⚠️ *Urgensi:* ${data.urgensi || "Normal"}\n\n_Segera tindak lanjuti dan lapor jika selesai._`;
-
-            updateLog(`🔔 <span class="highlight">Trigger Masuk!</span> Menyiapkan pengiriman ganda...`);
-
-            // 1. KIRIM KE TEKNISI (JAPRI)
-            updateLog(`📤 Mengirim Japri ke ${namaPilihan}...`);
-            await sendToFonnte(nomorTeknisi, pesan);
-
-            // 2. JEDA 2 DETIK LALU KIRIM KE GRUP
-            setTimeout(async () => {
-                updateLog(`📤 Mengirim ke Grup IPSRS...`);
-                const grupSuccess = await sendToFonnte(ID_GRUP_IPSRS, pesan);
-                
-                if (grupSuccess) {
-                    // 3. RESET DATABASE HANYA JIKA PROSES SELESAI
-                    await db.from('laporan_perbaikan').update({ kirim_wa: false }).eq('id', data.id);
-                    updateLog(`<span class="success">♻️ Semua terkirim. Database Standby.</span>`);
-                    updateLog(`---------------------------------`);
-                }
-            }, 2500);
+        function addLog(msg, color = "text-slate-300") {
+            const logDiv = document.getElementById('log');
+            const p = document.createElement('p');
+            p.className = color;
+            p.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logDiv.appendChild(p);
+            logDiv.scrollTop = logDiv.scrollHeight;
         }
 
-        async function sendToFonnte(target, msg) {
+        async function hubungkanKeDatabase() {
             try {
-                const response = await fetch('https://api.fonnte.com/send', {
-                    method: 'POST',
-                    headers: { 'Authorization': FONNTE_TOKEN },
-                    body: new URLSearchParams({
-                        'target': target,
-                        'message': msg,
-                        'countryCode': '62'
-                    })
-                });
-                const result = await response.json();
-                if (result.status === true) {
-                    updateLog(`<span class="success">✅ Berhasil terkirim ke: ${target}</span>`);
-                    return true;
-                } else {
-                    updateLog(`❌ Gagal ke ${target}: ${result.reason}`);
-                    return false;
-                }
+                supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+                
+                // Tes koneksi sederhana
+                const { data, error } = await supabaseClient.from('laporan_perbaikan').select('id').limit(1);
+                
+                if (error) throw error;
+
+                document.getElementById('status-badge').innerText = "✅ Terhubung!";
+                document.getElementById('status-badge').classList.remove('status-off', 'blink');
+                document.getElementById('status-badge').classList.add('status-on');
+                addLog("Koneksi Supabase Berhasil!", "text-emerald-400 font-bold");
+                
+                startRealtimeListener();
             } catch (err) {
-                updateLog(`❌ Error API: ${err.message}`);
-                return false;
+                retryCount++;
+                addLog(`Gagal terhubung (${retryCount}). Mencoba lagi dalam 3 detik...`, "text-rose-400");
+                setTimeout(hubungkanKeDatabase, 3000);
             }
         }
 
-        function updateLog(txt) {
-            const box = document.getElementById('logs');
-            const time = new Date().toLocaleTimeString();
-            box.innerHTML += `<div>[${time}] ${txt}</div>`;
-            box.scrollTop = box.scrollHeight;
+        function startRealtimeListener() {
+            addLog("Mendengarkan instruksi baru...", "text-sky-400");
+            
+            supabaseClient
+                .channel('perubahan_laporan')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'laporan_perbaikan' }, (payload) => {
+                    const data = payload.new;
+                    
+                    // Logika: Hanya kirim jika statusnya 'Proses' dan kirim_wa bernilai true
+                    if (data.status === 'Proses' && data.kirim_wa === true) {
+                        kirimKeWhatsApp(data);
+                    }
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        addLog("Saluran Realtime Aktif.", "text-emerald-500 font-bold");
+                    }
+                    if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                        addLog("Saluran terputus! Mencoba menyambung ulang...", "text-rose-500");
+                        setTimeout(hubungkanKeDatabase, 2000);
+                    }
+                });
         }
+
+        async function kirimKeWhatsApp(laporan) {
+            addLog(`Mendeteksi instruksi untuk: ${laporan.ditugaskan_ke}`, "text-yellow-400");
+            
+            const nomorWA = "628123164161"; // Nomor Gateway Bapak
+            const pesan = `*NOTIFIKASI PERBAIKAN BPS*%0A%0A` +
+                          `👤 *Teknisi:* ${laporan.ditugaskan_ke}%0A` +
+                          `🛠️ *Alat:* ${laporan.nama_alat}%0A` +
+                          `📍 *Lokasi:* ${laporan.lokasi}%0A` +
+                          `⚠️ *Masalah:* ${laporan.isi_laporan}%0A` +
+                          `📢 *Urgensi:* ${laporan.urgensi}%0A%0A` +
+                          `_Segera lakukan pengecekan ke lokasi._`;
+
+            const url = `https://api.whatsapp.com/send?phone=${nomorWA}&text=${pesan}`;
+            
+            addLog(`Meneruskan ke WhatsApp...`, "text-sky-400");
+            
+            // Membuka link WA di tab baru
+            window.open(url, '_blank');
+
+            // Update database agar tidak kirim berulang kali
+            await supabaseClient
+                .from('laporan_perbaikan')
+                .update({ kirim_wa: false })
+                .eq('id', laporan.id);
+            
+            addLog(`✅ Pesan terkirim ke sistem WA.`, "text-emerald-400");
+        }
+
+        // Jalankan saat halaman dibuka
+        hubungkanKeDatabase();
     </script>
 </body>
 </html>
